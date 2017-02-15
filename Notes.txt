@@ -1,0 +1,37 @@
+----------2/13/17----------
+I have changed from programming in c to programming in c++. I currently have a working 
+model. I need to commit using git. Then I will implement everything using classes.
+----------2/9/17----------
+I added a boundary feed back switch for the servo motor which prevents it from going 
+too high and a place to reset. I have added modifications to pins at the bottom.
+----------2/9/17----------
+Need to figure out how to make a feed back switch for the servo motor. I may need to 
+redesign my linear actuator button presser.
+----------2/7/17----------
+Fixed servo issue. Need to make sure to configure after disabling the servo.
+Reset to origin function works now.
+I need to add a structre for all the variables pertaining to a motor
+Need to fix issue with linear actuator arm 
+----------2/6/17----------
+Servo not working at all
+----------2/5/17----------
+I am currently having issues with Servo moving before I tell it
+
+Stepper right and left
+	Turn on 	= GPIO 0
+	Step Signal = GPIO 6
+	Direction 	= GPIO 2
+
+Stepper forward and backward
+	Turn on 	= GPIO 3
+	Step Signal = GPIO 4
+	Direction 	= GPIO 5
+
+Servo up and down
+	PWM signal 	= GPIO 1
+	Direction  	= Controlled by PWM signal
+
+Origin Switches
+	Right 		= GPIO 7
+	Bottom		= GPIO 8
+	Servo 		= GPIO 9
