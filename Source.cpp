@@ -1,204 +1,183 @@
 #include <stdio.h>
 #include <wiringPi.h>
 
-typedef struct{
-	int Activate, Signal, Direction, Origin;
-}StepperConfigPins;
-typedef struct{
-	int Signal, Origin;
-}ServoConfigPins;
-int ServoSignalUD = 1; 
 int Right = 0, Left = 1, Backward = 0, Forward = 1, Up = 1, Down = 0;
 
-void StepperConfigure(StepperConfigPins pin);
-void StepperMove(StepperConfigPins pin, int Direction, int Steps);
-void StepperMoveToOrigin(StepperConfigPins pin, int Direction);
-void ServoMove(ServoConfigPins pin, int Direction, int Duration);
-void PressButton1FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressButton2FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressButton3FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void ResetToOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-					ServoConfigPins pinServo);
-void PressPlusButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressMenuButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressRightArrowButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressLeftArrowButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
-void PressMinusButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo);
+class Stepper{
+	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection;
+	public:
+	Stepper(int pActivate, int pSignal, int pDirection, int pOrigin, int OriginDir){
+		pinActivate = pActivate;
+		pinSignal = pSignal;
+		pinDirection = pDirection;
+		pinOrigin = pOrigin;
+		OriginDirection = OriginDir;
+		pinMode(pinSignal, OUTPUT); 
+		pinMode(pinActivate, OUTPUT);
+		pinMode(pinDirection, OUTPUT);
+		digitalWrite(pinActivate, LOW);
+	}
+	void Move(int Direction, int Steps){
+		digitalWrite(pinDirection, Direction);//direction 
+		digitalWrite(pinActivate, HIGH);//turn on driver
+		delay(100);//wait for driver to fully turn on 
 
-int main(void){
-	StepperConfigPins RL = {0, 6, 2, 7};
-	StepperConfigPins FB = {3, 4, 5, 8};
-	ServoConfigPins Servo = {1, 9};
+		for(int i=0; i<Steps; i++){
+			digitalWrite(pinSignal, HIGH);
+			delayMicroseconds(1000);
+			digitalWrite(pinSignal, LOW);
+			delayMicroseconds(1000);
+		}
 
-	//int StepperActivateRL = 0, StepperSignalRL = 6, StepperDirectionRL = 2;
-	//int StepperActivateFB = 3, StepperSignalFB = 4, StepperDirectionFB = 5;
-	//int OriginRight = 7, OriginBottom = 8;
+		digitalWrite(pinActivate, LOW);//put driver to sleep 
+	}
+	void MoveToOrigin(){
+		pinMode(pinOrigin, INPUT);//Origin pin configure
+		pullUpDnControl(pinOrigin, PUD_UP);
 
-	wiringPiSetup();
+		digitalWrite(pinDirection, OriginDirection);//direction 
+		digitalWrite(pinActivate, HIGH);//turn on driver
+		delay(100);//wait for driver to fully turn on 
 
-	StepperConfigure(RL);
-	StepperConfigure(FB);
+		int count = 0;
+		while(digitalRead(pinOrigin) == 1){
+			digitalWrite(pinSignal, HIGH);
+			delayMicroseconds(1000);
+			digitalWrite(pinSignal, LOW);
+			delayMicroseconds(1000);
+			count++;
+		}
+		printf("count = %i\n", count);
+		digitalWrite(pinActivate, LOW);//put driver to sleep 
+	}
+};
 
-	ResetToOrigin(FB, RL, Servo);
-	//PressMinusButtonFromOrigin(FB, RL, Servo);
-	//PressMenuButtonFromOrigin(FB, RL, Servo);
-	//PressButton3FromOrigin(FB, RL, Servo);
-	//ResetToOrigin(FB, RL, Servo);
-
-	//StepperMove(FB, Backward, 500);
-	//StepperMove(RL, Right, 2000);
-
-	//ServoMove(Servo, Down, 1200);//1s = 100 14
-	//ServoMove(Servo, Up, 10000);//Reset to top
-
-	//ResetToOrigin(FB, RL, Servo);
-
-	//PressButton1FromOrigin(FB, RL, Servo);
-	//ResetToOrigin(FB, RL, Servo);
-
-	//PressButton2FromOrigin(FB, RL, Servo);
-	//ResetToOrigin(FB, RL, Servo);
-
-	//PressButton3FromOrigin(FB, RL, Servo);
-	//ResetToOrigin(FB, RL, Servo);
-}
-
-void PressButton1FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 1500);
-	StepperMove(pinRL, Left, 3300);
-	ServoMove(pinServo, Down, 1400);//1s = 100
-}
-void PressButton2FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 1500);
-	StepperMove(pinRL, Left, 7000);
-	ServoMove(pinServo, Down, 1400);//1s = 100
-}
-void PressButton3FromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 1500);
-	StepperMove(pinRL, Left, 10700);
-	ServoMove(pinServo, Down, 1400);//1s = 100
-}
-
-
-
-void PressPlusButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 4500);
-	StepperMove(pinRL, Left, 7000);
-	ServoMove(pinServo, Down, 1400);//1s = 100
-}
-void PressMenuButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 6500);
-	StepperMove(pinRL, Left, 7000);
-	ServoMove(pinServo, Down, 1200);//1s = 100
-}
-void PressRightArrowButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 6500);
-	StepperMove(pinRL, Left, 5000);
-	ServoMove(pinServo, Down, 1200);//1s = 100
-}
-void PressLeftArrowButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 6500);
-	StepperMove(pinRL, Left, 9000);
-	ServoMove(pinServo, Down, 1200);//1s = 100
-}
-void PressMinusButtonFromOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-								ServoConfigPins pinServo){
-	StepperMove(pinFB, Forward, 8700);
-	StepperMove(pinRL, Left, 7000);
-	ServoMove(pinServo, Down, 1200);//1s = 100
-}
-
-
-
-
-
-void ResetToOrigin(StepperConfigPins pinFB, StepperConfigPins pinRL, 
-					ServoConfigPins pinServo){
-	ServoMove(pinServo, Up, 123456);//big number to make sure reset to top
-	StepperMoveToOrigin(pinRL, Right);
-	StepperMoveToOrigin(pinFB, Backward);
-}
-
-void StepperConfigure(StepperConfigPins pin){
-	pinMode(pin.Signal, OUTPUT); 
-	pinMode(pin.Activate, OUTPUT);
-	pinMode(pin.Direction, OUTPUT);
-	digitalWrite(pin.Activate, LOW);
-}
-
-void StepperMove(StepperConfigPins pin, int Direction, int Steps){
-	digitalWrite(pin.Direction, Direction);//direction 
-	digitalWrite(pin.Activate, HIGH);//turn on driver
-	delay(100);//wait for driver to fully turn on 
-
-	for(int i=0; i<Steps; i++){
-		digitalWrite(pin.Signal, HIGH);
-		delayMicroseconds(1000);
-		digitalWrite(pin.Signal, LOW);
-		delayMicroseconds(1000);
+class Servo{
+	int pinSignal, pinOrigin, OriginDirection;
+	public:
+	Servo(int pSignal, int pOrigin, int OriginDir){
+		pinSignal = pSignal;
+		pinOrigin = pOrigin;
+		OriginDirection = OriginDir;
 	}
 
-	digitalWrite(pin.Activate, LOW);//put driver to sleep 
-}
-
-void StepperMoveToOrigin(StepperConfigPins pin, int Direction){
-	pinMode(pin.Origin, INPUT);//Origin pin configure
-	pullUpDnControl(pin.Origin, PUD_UP);
-
-	digitalWrite(pin.Direction, Direction);//direction 
-	digitalWrite(pin.Activate, HIGH);//turn on driver
-	delay(100);//wait for driver to fully turn on 
-
-	int count = 0;
-	while(digitalRead(pin.Origin) == 1){
-		digitalWrite(pin.Signal, HIGH);
-		delayMicroseconds(1000);
-		digitalWrite(pin.Signal, LOW);
-		delayMicroseconds(1000);
-		count++;
+	void Move(int Direction, int Duration){
+		pinMode(pinOrigin, INPUT);
+		pullUpDnControl(pinOrigin, PUD_UP);
+		if(!((digitalRead(pinOrigin) == 0) && (Direction == Up))){//prevent twitch
+			if(Direction == 0){
+				pwmWrite(pinSignal, 100);
+			}
+			if(Direction == 1){
+				pwmWrite(pinSignal, 50);
+			}
+			pinMode(pinSignal, PWM_OUTPUT);
+			pwmSetMode(PWM_MODE_MS);
+			pwmSetClock(384); //clock at 50kHz (20us tick)
+			pwmSetRange(1000); //range at 1000 ticks (20ms)
+			pinMode(pinOrigin, INPUT);
+			for(int i=0; i<Duration; i++){
+				if((digitalRead(pinOrigin) == 0) && (Direction == Up)){
+					break;
+				}else{
+					delay(10);
+				}
+			}
+		}
+		pinMode(pinSignal, INPUT);//Disable PWM
 	}
-	printf("count = %i\n", count);
-	digitalWrite(pin.Activate, LOW);//put driver to sleep 
-}
 
-void ServoMove(ServoConfigPins pin, int Direction, int Duration){
-	pinMode(pin.Origin, INPUT);
-	pullUpDnControl(pin.Origin, PUD_UP);
-	//if((digitalRead(pin.Origin) != 0) && (Direction != Up)){
-		if(Direction == 0){
-			pwmWrite(pin.Signal, 100);
-		}
-		if(Direction == 1){
-			pwmWrite(pin.Signal, 50);
-		}
-		pinMode(pin.Signal, PWM_OUTPUT);
-		pwmSetMode(PWM_MODE_MS);
-		pwmSetClock(384); //clock at 50kHz (20us tick)
-		pwmSetRange(1000); //range at 1000 ticks (20ms)
-		pinMode(pin.Origin, INPUT);
-		for(int i=0; i<Duration; i++){
-
-			if((digitalRead(pin.Origin) == 0) && (Direction == Up)){
-				break;
-			}else{
+	void MoveToOrigin(){
+		pinMode(pinOrigin, INPUT);
+		pullUpDnControl(pinOrigin, PUD_UP);
+		if(!((digitalRead(pinOrigin) == 0))){//prevent twitch
+			if(OriginDirection == 0){
+				pwmWrite(pinSignal, 100);
+			}
+			if(OriginDirection == 1){
+				pwmWrite(pinSignal, 50);
+			}
+			pinMode(pinSignal, PWM_OUTPUT);
+			pwmSetMode(PWM_MODE_MS);
+			pwmSetClock(384); //clock at 50kHz (20us tick)
+			pwmSetRange(1000); //range at 1000 ticks (20ms)
+			pinMode(pinOrigin, INPUT);
+			while(digitalRead(pinOrigin) == 1){
 				delay(10);
 			}
 		}
-	//}
-	pinMode(pin.Signal, INPUT);//Disable PWM
+		pinMode(pinSignal, INPUT);//Disable PWM
+	}
+};
+
+class Controller{
+	public:
+		Stepper *RL, *FB;
+		Servo *UD;
+		Controller(Stepper *inputRL, Stepper *inputFB, Servo *inputUD){
+			RL = inputRL;
+			FB = inputFB;
+			UD = inputUD;
+		}
+		void ResetToOrigin(){
+			UD->MoveToOrigin();
+			RL->MoveToOrigin();
+			FB->MoveToOrigin();
+		}
+		void PressButton1FromOrigin(){
+			FB->Move(Forward, 1500);
+			RL->Move(Left, 3300);
+			UD->Move(Down, 1400);
+		}
+		void PressButton2FromOrigin(){
+			FB->Move(Forward, 1500);
+			RL->Move(Left, 7000);
+			UD->Move(Down, 1400);
+		}
+		void PressButton3FromOrigin(){
+			FB->Move(Forward, 1500);
+			RL->Move(Left, 10700);
+			UD->Move(Down, 1400);
+		}
+		void PressPlusButtonFromOrigin(){
+			FB->Move(Forward, 4500);
+			RL->Move(Left, 7000);
+			UD->Move(Down, 1400);
+		}
+		void PressMenuButtonFromOrigin(){
+			FB->Move(Forward, 6500);
+			RL->Move(Left, 7000);
+			UD->Move(Down, 1200);
+		}
+		void PressRightArrowButtonFromOrigin(){
+			FB->Move(Forward, 6500);
+			RL->Move(Left, 5000);
+			UD->Move(Down, 1200);
+		}
+		void PressLeftArrowButtonFromOrigin(){
+			FB->Move(Forward, 6500);
+			RL->Move(Left, 9000);
+			UD->Move(Down, 1200);
+		}
+		void PressMinusButtonFromOrigin(){
+			FB->Move(Forward, 8700);
+			RL->Move(Left, 7000);
+			UD->Move(Down, 1200);
+		}
+};
+
+int main(void){
+
+	wiringPiSetup();
+
+	Stepper RightLeft(0, 6, 2, 7, Right);
+	Stepper ForwardBackward(3, 4, 5, 8, Backward);
+	Servo UpDown(1, 9, Up);
+
+	Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
+
+	myControl.ResetToOrigin();
+	myControl.PressMinusButtonFromOrigin();
+	myControl.ResetToOrigin();
+
 }
