@@ -1,3 +1,8 @@
+----------2/29/17----------
+Now works to press buttons relative to each other. But the code has a lot of repeats.
+----------2/16/17----------
+I need to figure out how to set Left or Right as the positive direction. I also need 
+to fix my relative movement.
 ----------2/13/17----------
 I have changed from programming in c to programming in c++. I currently have a working 
 model. I need to commit using git. Then I will implement everything using classes.

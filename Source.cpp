@@ -5,13 +5,17 @@ int Right = 0, Left = 1, Backward = 0, Forward = 1, Up = 1, Down = 0;
 
 class Stepper{
 	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection;
+	int PosDir;
 	public:
+	int StepLoc;
 	Stepper(int pActivate, int pSignal, int pDirection, int pOrigin, int OriginDir){
 		pinActivate = pActivate;
 		pinSignal = pSignal;
 		pinDirection = pDirection;
 		pinOrigin = pOrigin;
 		OriginDirection = OriginDir;
+		PosDir = !OriginDir;
+		StepLoc = 0;
 		pinMode(pinSignal, OUTPUT); 
 		pinMode(pinActivate, OUTPUT);
 		pinMode(pinDirection, OUTPUT);
@@ -27,8 +31,13 @@ class Stepper{
 			delayMicroseconds(1000);
 			digitalWrite(pinSignal, LOW);
 			delayMicroseconds(1000);
+			if(Direction == PosDir){
+				StepLoc++;
+			}else{
+				StepLoc--;
+			}
 		}
-
+		printf("Step Absolute Location = %i\n", StepLoc);
 		digitalWrite(pinActivate, LOW);//put driver to sleep 
 	}
 	void MoveToOrigin(){
@@ -46,8 +55,9 @@ class Stepper{
 			digitalWrite(pinSignal, LOW);
 			delayMicroseconds(1000);
 			count++;
+			StepLoc = 0;
 		}
-		printf("count = %i\n", count);
+		printf("How many steps it took to get to origin = %i\n", count);
 		digitalWrite(pinActivate, LOW);//put driver to sleep 
 	}
 };
@@ -111,6 +121,8 @@ class Servo{
 };
 
 class Controller{
+	private:
+		int X, Y;
 	public:
 		Stepper *RL, *FB;
 		Servo *UD;
@@ -129,40 +141,173 @@ class Controller{
 			RL->Move(Left, 3300);
 			UD->Move(Down, 1400);
 		}
+		void PressButton1Relative(){
+			Y = 1500 - FB->StepLoc;
+			printf("Button1Relative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 3300 - RL->StepLoc;
+			printf("Button1Relative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+
+		}
 		void PressButton2FromOrigin(){
 			FB->Move(Forward, 1500);
 			RL->Move(Left, 7000);
 			UD->Move(Down, 1400);
+		}
+		void PressButton2Relative(){
+			Y = 1500 - FB->StepLoc;
+			printf("Button2Relative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 7000 - RL->StepLoc;
+			printf("Button2Relative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+
 		}
 		void PressButton3FromOrigin(){
 			FB->Move(Forward, 1500);
 			RL->Move(Left, 10700);
 			UD->Move(Down, 1400);
 		}
+		void PressButton3Relative(){
+			Y = 1500 - FB->StepLoc;
+			printf("Button3Relative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 10700 - RL->StepLoc;
+			printf("Button3Relative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+
+		}
 		void PressPlusButtonFromOrigin(){
 			FB->Move(Forward, 4500);
 			RL->Move(Left, 7000);
 			UD->Move(Down, 1400);
+		}
+		void PressPlusButtonRelative(){
+			Y = 4500 - FB->StepLoc;
+			printf("PlusButtonRelative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 7000 - RL->StepLoc;
+			printf("PlusButtonRelative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+
 		}
 		void PressMenuButtonFromOrigin(){
 			FB->Move(Forward, 6500);
 			RL->Move(Left, 7000);
 			UD->Move(Down, 1200);
 		}
+		void PressMenuButtonRelative(){
+			Y = 6500 - FB->StepLoc;
+			printf("MenuButtonRelative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 7000 - RL->StepLoc;
+			printf("MenuButtonRelative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+
+		}
 		void PressRightArrowButtonFromOrigin(){
 			FB->Move(Forward, 6500);
 			RL->Move(Left, 5000);
 			UD->Move(Down, 1200);
+		}
+		void PressRightArrowButtonRelative(){
+			Y = 6500 - FB->StepLoc;
+			printf("RightArrowButtonRelative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 5000 - RL->StepLoc;
+			printf("RightArrowButtonRelative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
 		}
 		void PressLeftArrowButtonFromOrigin(){
 			FB->Move(Forward, 6500);
 			RL->Move(Left, 9000);
 			UD->Move(Down, 1200);
 		}
+		void PressLeftArrowButtonRelative(){
+			Y = 6500 - FB->StepLoc;
+			printf("LeftArrowButtonRelative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 9000 - RL->StepLoc;
+			printf("LeftArrowButtonRelative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
+		}
 		void PressMinusButtonFromOrigin(){
 			FB->Move(Forward, 8700);
 			RL->Move(Left, 7000);
 			UD->Move(Down, 1200);
+		}
+		void PressMinusButtonRelative(){
+			Y = 8700 - FB->StepLoc;
+			printf("MinusButtonRelative Y needs to move %i steps\n", Y);
+			if(Y >= 0){
+				FB->Move(Forward, Y);
+			}else{
+				FB->Move(Backward, -Y);
+			}
+			X = 7000 - RL->StepLoc;
+			printf("MinusButtonRelative X needs to move %i steps\n", X);
+			if(X >= 0){
+				RL->Move(Left, X);
+			}else{
+				RL->Move(Right, -X);
+			}
 		}
 };
 
@@ -176,8 +321,44 @@ int main(void){
 
 	Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
 
+	printf("Resetting to Origin\n");
 	myControl.ResetToOrigin();
-	myControl.PressMinusButtonFromOrigin();
-	myControl.ResetToOrigin();
+	printf("ResetToOrigin Complete\n");
+	delay(1000);
+
+	printf("Now starting PressPlusButtonRelative\n");
+	myControl.PressPlusButtonRelative();
+	printf("PressPlusButtonRelative Finished\n");
+	delay(1000);
+
+	printf("Now Starting PressButton2Relative\n");
+	myControl.PressButton2Relative();
+	printf("PressButton2Relative finished\n");
+	delay(1000);
+
+	printf("Now Starting PressButton1Relative\n");
+	myControl.PressButton1Relative();
+	printf("PressButton1Relative finished\n");
+	delay(1000);
+
+	printf("Starting Left Arrow\n");
+	myControl.PressLeftArrowButtonRelative();
+	printf("success Left Arrow\n");
+	delay(1000);
+
+	printf("Starting Menu\n");
+	myControl.PressMenuButtonRelative();
+	printf("success Menu\n");
+	delay(1000);
+
+	printf("Starting Right Arrow\n");
+	myControl.PressRightArrowButtonRelative();
+	printf("success Right Arrow\n");
+	delay(1000);
+
+	printf("Starting Minus\n");
+	myControl.PressMinusButtonRelative();
+	printf("success Minus\n");
+	delay(1000);
 
 }
