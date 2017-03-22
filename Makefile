@@ -1,2 +1,2 @@
 PWM:
-	g++ -o out Source.cpp -lwiringPi 
+	g++ -std=c++11 -o out Source.cpp -lwiringPi 
