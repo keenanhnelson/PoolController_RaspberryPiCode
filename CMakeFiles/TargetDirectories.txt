@@ -1,0 +1,1 @@
+/home/pi/CProgramming/SpaController/Main/CMakeFiles/out.dir

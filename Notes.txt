@@ -1,3 +1,6 @@
+----------3/26/17----------
+Added OpenCV functionality. cmake is now used to create the Makefile. Webcam is used 
+to take before and after images.
 ----------3/21/17----------
 I have cleaned the code up a lot and made three different classes. One class for the 
 stepper motors, another for the servo motor, and the last one controls all the other 

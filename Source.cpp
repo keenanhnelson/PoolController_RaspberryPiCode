@@ -1,6 +1,16 @@
 #include <stdio.h>
+#include <iostream>
+#include <string>
+#include <boost/array.hpp>
+#include <boost/asio.hpp>
 #include <wiringPi.h>
+#include "opencv2/opencv.hpp"
 
+using boost::asio::ip::tcp;
+using namespace cv;
+using namespace std;
+
+void CaptureImage(string name);
 
 class Stepper{
 	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection;
@@ -128,7 +138,8 @@ class Controller{
 	char ButtonName[8][20]= {"1"  ,"2"    ,"3"   ,"Plus","Menu","Right","Left","Minus"};
 	int XButtonLoc[8] = 	{3300 ,7000   ,10700 ,7000  ,7000  ,5000   ,9000  ,7000};
 	int YButtonLoc[8] = 	{1500 ,1500   ,1500  ,4500  ,6500  ,6500   ,6500  ,8700};
-	int UpDownServo[8] = 	{1400 ,1400   ,1400  ,1400  ,1200  ,1200   ,1200  ,1200};
+	int UpDownServo[8] = 	{1300 ,1300   ,1300  ,1300  ,1300  ,1300   ,1300  ,1300};
+	//int UpDownServo[8] = 	{1400 ,1400   ,1400  ,1400  ,1200  ,1200   ,1200  ,1200};
 	public:
 		static const int Right=0, Left=1, Backward=0, Forward=1, Up=1, Down=0;
 		int FirstB=0,SecondB=1,ThirdB=2,PlusB=3,MenuB=4,RightB=5,LeftB=6,MinusB=7;
@@ -180,11 +191,78 @@ int main(void){
 	Stepper RightLeft(0, 6, 2, 7, Controller::Right);
 	Stepper ForwardBackward(3, 4, 5, 8, Controller::Backward);
 	Servo UpDown(1, 9, Controller::Up);
+	Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
 
-	//delay(5000);
-	//while(1){
-		ForwardBackward.Move(1, 10000);
-	//}
+
+	try{
+		boost::asio::io_service io_service;
+		tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 12345));
+
+		while(1){
+			tcp::socket socket(io_service);
+			acceptor.accept(socket);
+
+			boost::array<char, 128> buf;
+			boost::system::error_code error;
+			int Reading = 0;
+			std::string ReceivedString;
+			while(Reading == 0){
+				size_t len = socket.read_some(boost::asio::buffer(buf), error);
+				std::cout.write(buf.data(), len);
+				for(int i=0; i<len; i++){
+					ReceivedString += buf.data()[i];
+					if(buf.data()[i] == '\n'){
+						Reading = 1;
+					}
+				}
+			}
+			if(ReceivedString == "One\n"){
+				CaptureImage("Before.jpg");
+				myControl.PressButtonFromOrigin(myControl.FirstB);
+				CaptureImage("After.jpg");
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Two\n"){
+				myControl.PressButtonFromOrigin(myControl.SecondB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Three\n"){
+				myControl.PressButtonFromOrigin(myControl.ThirdB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Plus\n"){
+				myControl.PressButtonFromOrigin(myControl.PlusB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Menu\n"){
+				myControl.PressButtonFromOrigin(myControl.MenuB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Right\n"){
+				myControl.PressButtonFromOrigin(myControl.RightB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Left\n"){
+				myControl.PressButtonFromOrigin(myControl.LeftB);
+				myControl.ResetToOrigin();
+			}
+			if(ReceivedString == "Minus\n"){
+				myControl.PressButtonFromOrigin(myControl.MinusB);
+				myControl.ResetToOrigin();
+			}
+			std::cout << "Message Received: " << ReceivedString;
+			std::string message = "";
+			message = "Button pressed: " + ReceivedString;
+
+			boost::system::error_code ignored_error;
+			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+		}
+	}
+	catch(std::exception& e){
+		std::cerr << e.what() << std::endl;
+	}
+
+	return(0);
 
 	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
 
@@ -195,4 +273,13 @@ int main(void){
 	//for(int i=0; i<8; i++){
 	//	myControl.PressButtonRelative(i);
 	//}
+}
+void CaptureImage(string name){
+	VideoCapture cap;
+	if(!cap.open(0)){
+		printf("error with opening webcam 1\n");
+	}
+	Mat frame;
+	cap >> frame;
+	imwrite(name, frame);
 }
