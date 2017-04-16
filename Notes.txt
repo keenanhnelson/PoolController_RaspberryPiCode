@@ -1,3 +1,5 @@
+----------4/16/17----------
+added .gitignore
 ----------3/26/17----------
 Added OpenCV functionality. cmake is now used to create the Makefile. Webcam is used 
 to take before and after images.
