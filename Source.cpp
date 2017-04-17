@@ -229,48 +229,6 @@ int main(void){
 					myControl.ResetToOrigin();
 				}
 			}
-			//if(ReceivedString == "One\n"){
-			//	string str = ReceivedString;
-			//	str.erase(str.end()-1, str.end());
-
-			//	CaptureImage("Before" + str + ".png");
-			//	myControl.PressButtonFromOrigin(myControl.FirstB);
-			//	CaptureImage("After" + str + ".png");
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Two\n"){
-			//	string str = ReceivedString;
-			//	str.erase(str.end()-1, str.end());
-
-			//	CaptureImage("Before" + str + ".png");
-			//	myControl.PressButtonFromOrigin(myControl.SecondB);
-			//	CaptureImage("After" + str + ".png");
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Three\n"){
-			//	myControl.PressButtonFromOrigin(myControl.ThirdB);
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Plus\n"){
-			//	myControl.PressButtonFromOrigin(myControl.PlusB);
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Menu\n"){
-			//	myControl.PressButtonFromOrigin(myControl.MenuB);
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Right\n"){
-			//	myControl.PressButtonFromOrigin(myControl.RightB);
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Left\n"){
-			//	myControl.PressButtonFromOrigin(myControl.LeftB);
-			//	myControl.ResetToOrigin();
-			//}
-			//if(ReceivedString == "Minus\n"){
-			//	myControl.PressButtonFromOrigin(myControl.MinusB);
-			//	myControl.ResetToOrigin();
-			//}
 			std::cout << "Message Received: " << ReceivedString;
 			std::string message = "";
 			message = "Button pressed: " + ReceivedString;
