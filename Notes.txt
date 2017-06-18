@@ -1,3 +1,8 @@
+----------6/18/17----------
+This code will now take a before image send that image to the smartphone then push the 
+requested button next it will take an after image lastly it will send a confirmation 
+message. All of the basic functions now work. I will need to add the ability to take 
+images without pushing a button.
 ----------4/16/17----------
 added .gitignore and removed unnecessary files that git was tracking.
 ----------3/26/17----------

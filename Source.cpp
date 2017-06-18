@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include <unistd.h>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <wiringPi.h>
@@ -10,6 +11,7 @@ using boost::asio::ip::tcp;
 using namespace cv;
 using namespace std;
 
+//void CaptureImage(string name, VideoCapture *cap);
 void CaptureImage(string name);
 
 class Stepper{
@@ -184,6 +186,165 @@ class Controller{
 		}
 };
 
+class Server{
+	private:
+		Controller *myControl;
+		boost::asio::io_service myIO_service;
+		boost::asio::ip::tcp::acceptor *myAcceptor;
+		int myPort;
+		int NumOfButtons = 8;
+		char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
+	public:
+		std::string myFilename = "ToSendDog.bmp";
+
+		Server(Controller *inputControl, int port){
+			myPort = port;
+			myAcceptor = new boost::asio::ip::tcp::acceptor(
+					myIO_service, 
+					boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), myPort));
+			myControl = inputControl;
+		}
+
+		void Start(){
+			try{
+				boost::array<char, 1024> buf;
+				size_t file_size = 0;
+
+				std::cout << "Opening Webcam\n";
+				VideoCapture cap(0);
+				while(!cap.open(0)){
+					printf("Waitng for Webcam to open...\n");
+					delay(200);
+				}
+				Mat frame;
+				cap >> frame;
+
+				while(1){
+					boost::asio::ip::tcp::socket mySocket(myIO_service);
+					std::cout << "Waiting for client connection\n";
+					myAcceptor->accept(mySocket);
+					std::cout << "obtained client connection" << std::endl;
+
+					boost::array<char, 128> buf;
+					boost::system::error_code error;
+					int Reading = 0;
+					std::string ReceivedString;
+					while(Reading == 0){
+						size_t len = mySocket.read_some(boost::asio::buffer(buf), error);
+						std::cout.write(buf.data(), len);
+						for(int i=0; i<len; i++){
+							ReceivedString += buf.data()[i];
+							if(buf.data()[i] == '\n'){
+								Reading = 1;
+							}
+						}
+					}
+					for(int i=0; i<NumOfButtons; i++){
+						if(ReceivedString == ButtonName[i]){
+							string str = ReceivedString;
+							str.erase(str.end()-1, str.end());
+
+							std::string ImageFilename = "Before.png";
+							//CaptureImage(ImageFilename);
+							//clear out image buffer
+							for(int b=0; b<5; b++){
+								cap >> frame;
+							}
+							imwrite(ImageFilename, frame);
+							FileTransfer(&mySocket, ImageFilename);
+
+							myControl->PressButtonFromOrigin(i);
+							sleep(1);
+
+							ImageFilename = "After.png";
+							//CaptureImage(ImageFilename);
+							//clear out image buffer
+							for(int b=0; b<5; b++){
+								cap >> frame;
+							}
+							imwrite(ImageFilename, frame);
+							FileTransfer(&mySocket, ImageFilename);
+
+							myControl->ResetToOrigin();
+						}
+					}
+
+					//Read confirmation message from client
+					boost::asio::streambuf ReceiveBuf;
+				    boost::asio::read_until(mySocket, ReceiveBuf, "\n");
+				    std::istream ReceiveStream(&ReceiveBuf);
+				    std::string ClientConfirm;            
+				    ReceiveStream >> ClientConfirm;
+					std::cout << "ClientConfirm = " << ClientConfirm << std::endl;
+
+					//std::cout << "Message Received: " << ReceivedString;
+					std::string message = "";
+					message = "Button pressed: " + ReceivedString;
+					std::cout << message << std::endl;
+
+					boost::system::error_code ignored_error;
+					boost::asio::write(mySocket, boost::asio::buffer(message), ignored_error);
+				}
+			}
+			catch(std::exception& e){
+				std::cerr << e.what() << std::endl;
+			}
+		}
+
+		void FileTransfer(boost::asio::ip::tcp::socket *myFileSocket,
+				std::string myFilename){
+			boost::array<char, 1024> buf;
+			size_t file_size = 0;
+			try
+			{
+				boost::system::error_code myFileError;
+				std::ifstream source_file(myFilename, std::ios_base::binary | std::ios_base::ate);
+				if (!source_file)
+				{
+					std::cout << "failed to open " << myFilename << std::endl;
+				}
+				size_t file_size = source_file.tellg();
+				source_file.seekg(0);
+				// first send file name and file size to server
+				boost::asio::streambuf request;
+				std::ostream request_stream(&request);
+				request_stream << myFilename << "\n"
+					<< file_size << "\n\n";
+				boost::asio::write(*myFileSocket, request);
+				std::cout << "start sending file content.\n";
+				for (;;)
+				{
+
+					if (source_file.eof()==false)
+					{
+						//place file into array
+						source_file.read(buf.c_array(), (std::streamsize)buf.size());
+						if (source_file.gcount()<=0)
+						{
+							std::cout << "read file error " << std::endl;
+						}
+						boost::asio::write(*myFileSocket, 
+							boost::asio::buffer(buf.c_array(), source_file.gcount()),
+							boost::asio::transfer_all(),
+							myFileError);
+						if (myFileError)
+						{
+							std::cout << "send myFileError:" << myFileError << std::endl;
+						}
+					}
+					else{
+						break;
+					}
+				}
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
+		}
+};
+
+
 int main(void){
 
 	wiringPiSetup();
@@ -195,51 +356,10 @@ int main(void){
 	int NumOfButtons = 8;
 	char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
 
+	Server myServer(&myControl, 12345);
 
-	try{
-		boost::asio::io_service io_service;
-		tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 12345));
+	myServer.Start();
 
-		while(1){
-			tcp::socket socket(io_service);
-			acceptor.accept(socket);
-
-			boost::array<char, 128> buf;
-			boost::system::error_code error;
-			int Reading = 0;
-			std::string ReceivedString;
-			while(Reading == 0){
-				size_t len = socket.read_some(boost::asio::buffer(buf), error);
-				std::cout.write(buf.data(), len);
-				for(int i=0; i<len; i++){
-					ReceivedString += buf.data()[i];
-					if(buf.data()[i] == '\n'){
-						Reading = 1;
-					}
-				}
-			}
-			for(int i=0; i<NumOfButtons; i++){
-				if(ReceivedString == ButtonName[i]){
-					string str = ReceivedString;
-					str.erase(str.end()-1, str.end());
-
-					CaptureImage("Before" + str + ".png");
-					myControl.PressButtonFromOrigin(i);
-					CaptureImage("After" + str + ".png");
-					myControl.ResetToOrigin();
-				}
-			}
-			std::cout << "Message Received: " << ReceivedString;
-			std::string message = "";
-			message = "Button pressed: " + ReceivedString;
-
-			boost::system::error_code ignored_error;
-			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-		}
-	}
-	catch(std::exception& e){
-		std::cerr << e.what() << std::endl;
-	}
 
 	return(0);
 
@@ -253,10 +373,11 @@ int main(void){
 	//	myControl.PressButtonRelative(i);
 	//}
 }
+//void CaptureImage(string name, VideoCapture *cap){
 void CaptureImage(string name){
-	VideoCapture cap;
+	VideoCapture cap(0);
 	while(!cap.open(0)){
-		printf("error with opening webcam\n");
+		printf("Waitng for Webcam to open...\n");
 		delay(200);
 	}
 	Mat frame;
