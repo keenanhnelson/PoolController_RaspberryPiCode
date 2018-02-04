@@ -1,3 +1,9 @@
+----------2/3/18----------
+-This is a brand new version of the hardware.
+-removed pActivate from deactivating stepper motor and added a function to deactivate
+	the stepper motors.
+-exposed delay between steps. Added StepDelay to initial variables. 
+	StepDelay allows for different speed stepper motors
 ----------6/18/17----------
 This code will now take a before image send that image to the smartphone then push the 
 requested button next it will take an after image lastly it will send a confirmation 

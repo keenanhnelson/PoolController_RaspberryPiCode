@@ -15,35 +15,40 @@ using namespace std;
 void CaptureImage(string name);
 
 class Stepper{
-	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection;
+	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection, StepDelay;
 	int PosDir;
 	public:
 	int StepLoc;
-	Stepper(int pActivate, int pSignal, int pDirection, int pOrigin, int OriginDir){
+	Stepper(int pActivate, int pSignal, int pDirection, int pOrigin, int OriginDir,
+				int InitialStepDelay){
 		pinActivate = pActivate;
 		pinSignal = pSignal;
 		pinDirection = pDirection;
 		pinOrigin = pOrigin;
 		OriginDirection = OriginDir;
 		PosDir = !OriginDir;
+		StepDelay = InitialStepDelay;
 		StepLoc = 0;
 		pinMode(pinSignal, OUTPUT); 
 		pinMode(pinActivate, OUTPUT);
 		pinMode(pinDirection, OUTPUT);
-		digitalWrite(pinActivate, LOW);
+		//digitalWrite(pinActivate, LOW);
 	}
 	void Move(int Direction, int Steps){
 		digitalWrite(pinDirection, Direction);//direction 
 		digitalWrite(pinActivate, HIGH);//turn on driver
+		printf("waiting for stepper motor driver to turn on.\n");
 		delay(100);//wait for driver to fully turn on 
+		printf("done waiting\n");
+
 
 		printf("Direction = %i\n", Direction);
 		printf("PosDir = %i\n", PosDir);
 		for(int i=0; i<Steps; i++){
 			digitalWrite(pinSignal, HIGH);
-			delayMicroseconds(1000);
+			delayMicroseconds(StepDelay);//1000
 			digitalWrite(pinSignal, LOW);
-			delayMicroseconds(1000);
+			delayMicroseconds(StepDelay);//1000
 			if(Direction == PosDir){
 				StepLoc++;
 			}else{
@@ -51,7 +56,7 @@ class Stepper{
 			}
 		}
 		printf("Step Absolute Location = %i\n", StepLoc);
-		digitalWrite(pinActivate, LOW);//put driver to sleep 
+		//digitalWrite(pinActivate, LOW);//put driver to sleep 
 	}
 	void MoveToOrigin(){
 		pinMode(pinOrigin, INPUT);//Origin pin configure
@@ -64,13 +69,16 @@ class Stepper{
 		int count = 0;
 		while(digitalRead(pinOrigin) == 1){
 			digitalWrite(pinSignal, HIGH);
-			delayMicroseconds(1000);
+			delayMicroseconds(StepDelay);
 			digitalWrite(pinSignal, LOW);
-			delayMicroseconds(1000);
+			delayMicroseconds(StepDelay);
 			count++;
 			StepLoc = 0;
 		}
 		printf("How many steps it took to get to origin = %i\n", count);
+		//digitalWrite(pinActivate, LOW);//put driver to sleep 
+	}
+	void TurnOff(){
 		digitalWrite(pinActivate, LOW);//put driver to sleep 
 	}
 };
@@ -140,10 +148,10 @@ class Controller{
 	char ButtonName[8][20]= {"1"  ,"2"    ,"3"   ,"Plus","Menu","Right","Left","Minus"};
 	int XButtonLoc[8] = 	{3300 ,7000   ,10700 ,7000  ,7000  ,5000   ,9000  ,7000};
 	int YButtonLoc[8] = 	{1500 ,1500   ,1500  ,4500  ,6500  ,6500   ,6500  ,8700};
-	int UpDownServo[8] = 	{1300 ,1300   ,1300  ,1300  ,1300  ,1300   ,1300  ,1300};
+	int UpDownServo[8] = 	{1300 ,1300   ,1400  ,1300  ,1300  ,1300   ,1300  ,1300};
 	//int UpDownServo[8] = 	{1400 ,1400   ,1400  ,1400  ,1200  ,1200   ,1200  ,1200};
 	public:
-		static const int Right=0, Left=1, Backward=0, Forward=1, Up=1, Down=0;
+		static const int Right=0, Left=1, Backward=1, Forward=0, Up=1, Down=0;
 		int FirstB=0,SecondB=1,ThirdB=2,PlusB=3,MenuB=4,RightB=5,LeftB=6,MinusB=7;
 		Stepper *RL, *FB;
 		Servo *UD;
@@ -192,8 +200,8 @@ class Server{
 		boost::asio::io_service myIO_service;
 		boost::asio::ip::tcp::acceptor *myAcceptor;
 		int myPort;
-		int NumOfButtons = 8;
-		char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
+		int NumOfButtons = 9;
+		char ButtonName[9][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n", "TakeImage\n"};
 	public:
 		std::string myFilename = "ToSendDog.bmp";
 
@@ -201,7 +209,7 @@ class Server{
 			myPort = port;
 			myAcceptor = new boost::asio::ip::tcp::acceptor(
 					myIO_service, 
-					boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), myPort));
+					boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), myPort));
 			myControl = inputControl;
 		}
 
@@ -239,33 +247,44 @@ class Server{
 							}
 						}
 					}
-					for(int i=0; i<NumOfButtons; i++){
-						if(ReceivedString == ButtonName[i]){
-							string str = ReceivedString;
-							str.erase(str.end()-1, str.end());
+					if(ReceivedString == ButtonName[8]){//Take Image
+						//clear out image buffer and take picture
+						for(int b=0; b<5; b++){
+							cap >> frame;
+						}
+						std::string TakePicFilename = "TakePic.png";
+						imwrite(TakePicFilename, frame);
+						FileTransfer(&mySocket, TakePicFilename);
+					}
+					else{
+						for(int i=0; i<NumOfButtons; i++){
+							if((ReceivedString == ButtonName[i])){
+								string str = ReceivedString;
+								str.erase(str.end()-1, str.end());
 
-							std::string ImageFilename = "Before.png";
-							//CaptureImage(ImageFilename);
-							//clear out image buffer
-							for(int b=0; b<5; b++){
-								cap >> frame;
+								std::string ImageFilename = "Before.png";
+								//CaptureImage(ImageFilename);
+								//clear out image buffer and take picture
+								for(int b=0; b<5; b++){
+									cap >> frame;
+								}
+								imwrite(ImageFilename, frame);
+								FileTransfer(&mySocket, ImageFilename);
+
+								myControl->PressButtonFromOrigin(i);
+								sleep(1);
+
+								ImageFilename = "After.png";
+								//CaptureImage(ImageFilename);
+								//clear out image buffer and take picture
+								for(int b=0; b<5; b++){
+									cap >> frame;
+								}
+								imwrite(ImageFilename, frame);
+								FileTransfer(&mySocket, ImageFilename);
+
+								myControl->ResetToOrigin();
 							}
-							imwrite(ImageFilename, frame);
-							FileTransfer(&mySocket, ImageFilename);
-
-							myControl->PressButtonFromOrigin(i);
-							sleep(1);
-
-							ImageFilename = "After.png";
-							//CaptureImage(ImageFilename);
-							//clear out image buffer
-							for(int b=0; b<5; b++){
-								cap >> frame;
-							}
-							imwrite(ImageFilename, frame);
-							FileTransfer(&mySocket, ImageFilename);
-
-							myControl->ResetToOrigin();
 						}
 					}
 
@@ -345,21 +364,36 @@ class Server{
 };
 
 
-int main(void){
+int main(int a, char **b){
 
 	wiringPiSetup();
 
-	Stepper RightLeft(0, 6, 2, 7, Controller::Right);
-	Stepper ForwardBackward(3, 4, 5, 8, Controller::Backward);
-	Servo UpDown(1, 9, Controller::Up);
-	Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
-	int NumOfButtons = 8;
-	char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
+	Stepper ForwardBackward(0, 6, 2, 7, Controller::Forward, 10000);
+	Stepper RightLeft(3, 4, 5, 8, Controller::Left, 1000);
+	//Servo UpDown(1, 9, Controller::Up);
+	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
+	//int NumOfButtons = 8;
+	//char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
 
-	Server myServer(&myControl, 12345);
+	//Server myServer(&myControl, 24957);
 
-	myServer.Start();
+	//myServer.Start();
 
+
+	//if(a==5){
+		RightLeft.MoveToOrigin();//Direction Steps
+		ForwardBackward.MoveToOrigin();//Direction Steps
+		//RightLeft.Move(atoi(b[1]), atoi(b[2]));//Direction Steps
+		//ForwardBackward.Move(atoi(b[3]), atoi(b[4]));//Direction Steps
+	//}else{
+	//	printf("incorrect number of arguments\n");
+	//}
+
+	cout << "Type anything and hit enter to turn off motors\n";
+	int wait;
+	cin >> wait;
+	RightLeft.TurnOff();
+	ForwardBackward.TurnOff();
 
 	return(0);
 
