@@ -6,13 +6,12 @@
 #include <boost/asio.hpp>
 #include <wiringPi.h>
 #include "opencv2/opencv.hpp"
+#include <thread>
+#include <mutex>
 
 using boost::asio::ip::tcp;
 using namespace cv;
 using namespace std;
-
-//void CaptureImage(string name, VideoCapture *cap);
-void CaptureImage(string name);
 
 class Stepper{
 	int pinActivate, pinSignal, pinDirection, pinOrigin, OriginDirection, StepDelay;
@@ -33,6 +32,12 @@ class Stepper{
 		pinMode(pinActivate, OUTPUT);
 		pinMode(pinDirection, OUTPUT);
 		//digitalWrite(pinActivate, LOW);
+	}
+	void SetMoveSpeed(int SpeedToChangeTo){
+		StepDelay = SpeedToChangeTo;
+	}
+	int GetMoveSpeed(){
+		return(StepDelay);
 	}
 	void Move(int Direction, int Steps){
 		digitalWrite(pinDirection, Direction);//direction 
@@ -81,13 +86,59 @@ class Stepper{
 	void TurnOff(){
 		digitalWrite(pinActivate, LOW);//put driver to sleep 
 	}
+	void TurnOnStepperToStabilizePosition(){
+		digitalWrite(pinActivate, HIGH);//Wake up driver. Used to stabilize position
+		//delayMicroseconds(1000000);//Sleep for 1ms to stabilize position
+		printf("stabilizing position\n");
+		delay(200);
+		printf("stabilizing finished\n");
+	}
 };
 
-class Servo{
+class ServoPosition{
+	int pinSignal;
+	public:
+	static const int Right=0, Left=1, Backward=0, Forward=1, Up=1, Down=0;
+	ServoPosition(int pSignal){
+		pinSignal = pSignal;
+		//pwmWrite(pinSignal, 90);
+		pinMode(pinSignal, PWM_OUTPUT);
+		pwmSetMode(PWM_MODE_MS);
+		pwmSetClock(384); //clock at 50kHz (20us tick)
+		pwmSetRange(1000); //range at 1000 ticks (20ms)
+	}
+
+	void Move(int Position, int Duration){
+		pwmWrite(pinSignal, Position);
+		//pinMode(pinSignal, PWM_OUTPUT);
+		//pwmSetMode(PWM_MODE_MS);
+		//pwmSetClock(384); //clock at 50kHz (20us tick)
+		//pwmSetRange(1000); //range at 1000 ticks (20ms)
+		delay(Duration);
+		//pinMode(pinSignal, INPUT);//Disable PWM
+	}
+
+	void MoveToOrigin(){
+		pwmWrite(pinSignal, 50);
+		//pinMode(pinSignal, PWM_OUTPUT);
+		//pwmSetMode(PWM_MODE_MS);
+		//pwmSetClock(384); //clock at 50kHz (20us tick)
+		//pwmSetRange(1000); //range at 1000 ticks (20ms)
+		delay(500);
+		//pinMode(pinSignal, INPUT);//Disable PWM
+	}
+
+	void LockPosition(){
+		pwmWrite(pinSignal, 75);//75
+		delay(500);
+	}
+};
+
+class ServoContinuous{
 	int pinSignal, pinOrigin, OriginDirection;
 	public:
 	static const int Right=0, Left=1, Backward=0, Forward=1, Up=1, Down=0;
-	Servo(int pSignal, int pOrigin, int OriginDir){
+	ServoContinuous(int pSignal, int pOrigin, int OriginDir){
 		pinSignal = pSignal;
 		pinOrigin = pOrigin;
 		OriginDirection = OriginDir;
@@ -146,51 +197,107 @@ class Controller{
 	private:
 		int X, Y;
 	char ButtonName[8][20]= {"1"  ,"2"    ,"3"   ,"Plus","Menu","Right","Left","Minus"};
-	int XButtonLoc[8] = 	{3300 ,7000   ,10700 ,7000  ,7000  ,5000   ,9000  ,7000};
-	int YButtonLoc[8] = 	{1500 ,1500   ,1500  ,4500  ,6500  ,6500   ,6500  ,8700};
-	int UpDownServo[8] = 	{1300 ,1300   ,1400  ,1300  ,1300  ,1300   ,1300  ,1300};
-	//int UpDownServo[8] = 	{1400 ,1400   ,1400  ,1400  ,1200  ,1200   ,1200  ,1200};
+	int XButtonLoc[8] = 	{370  ,245    ,125   ,240   ,248   ,316    ,175   ,266};
+	int YButtonLoc[8] = 	{4	  ,4	  ,4	 ,34	,56	   ,47     ,63    ,77 };
+	int UpDownServo[8] = 	{87   ,87	  ,87    ,86    ,86	   ,83	   ,85	  ,83 };
 	public:
 		static const int Right=0, Left=1, Backward=1, Forward=0, Up=1, Down=0;
 		int FirstB=0,SecondB=1,ThirdB=2,PlusB=3,MenuB=4,RightB=5,LeftB=6,MinusB=7;
 		Stepper *RL, *FB;
-		Servo *UD;
-		Controller(Stepper *inputRL, Stepper *inputFB, Servo *inputUD){
+		ServoPosition *UD;
+		thread EjectButtonThread;
+		mutex MotorControlMutex;
+
+		Controller(Stepper *inputRL, Stepper *inputFB, ServoPosition *inputUD, 
+					int inputEjectButtonPin){
 			RL = inputRL;
 			FB = inputFB;
 			UD = inputUD;
+			EjectButtonThread = thread(&Controller::HandleEjectStatus, this,
+										inputEjectButtonPin);
+			EjectButtonThread.detach();
+			
+		}
+		void HandleEjectStatus(int EjectButtonPin){//Thread use only
+			//Setup eject button
+			pinMode(EjectButtonPin, INPUT);
+			pullUpDnControl(EjectButtonPin, PUD_UP);
+			bool LockPositionState = 0;
+
+			while(1){
+				if(digitalRead(EjectButtonPin) == 0 && LockPositionState == 0){
+					MotorControlMutex.lock();
+					MoveToUnlockPosition();
+					LockPositionState = 1;
+					TurnOffSteppers();
+					MotorControlMutex.unlock();
+				}
+				if(digitalRead(EjectButtonPin) == 0 && LockPositionState == 1){
+					MotorControlMutex.lock();
+					MoveToLockPosition();
+					LockPositionState = 0;
+					TurnOffSteppers();
+					MotorControlMutex.unlock();
+				}
+			}
 		}
 		void ResetToOrigin(){
 			UD->MoveToOrigin();
-			RL->MoveToOrigin();
 			FB->MoveToOrigin();
+			RL->MoveToOrigin();
+		}
+		void MoveToLockPosition(){
+			ResetToOrigin();
+			FB->Move(Controller::Backward, 12);
+			UD->LockPosition();
+		}
+		void MoveToUnlockPosition(){
+			UD->MoveToOrigin();
+			//ResetToOrigin();
+			//FB->Move(Controller::Backward, 220);
+		}
+		void TurnOffSteppers(){
+			RL->TurnOff();
+			FB->TurnOff();
+		}
+		void TurnOnSteppersToStabilizePosition(){
+			RL->TurnOnStepperToStabilizePosition();
+			FB->TurnOnStepperToStabilizePosition();
 		}
 		void PressButtonFromOrigin(int i){
+			MotorControlMutex.lock();
+			TurnOnSteppersToStabilizePosition();
 			printf("Returning to Origin\n");
 			ResetToOrigin();
 			printf("Going to press button %s\n", ButtonName[i]);
-			FB->Move(Forward, YButtonLoc[i]);
-			RL->Move(Left, XButtonLoc[i]);
-			UD->Move(Down, UpDownServo[i]);
+			FB->Move(Backward, YButtonLoc[i]);
+			RL->Move(Right, XButtonLoc[i]);
+			UD->Move(UpDownServo[i], 700);
+			UD->MoveToOrigin();
 			printf("Button %s has been pressed\n", ButtonName[i]);
+			MotorControlMutex.unlock();
 		}
 		void PressButtonRelative(int i){
+			MotorControlMutex.lock();
+			UD->MoveToOrigin();//Make sure servo is all the way up
+			printf("Button %s has been pressed\n", ButtonName[i]);
 			printf("Relatively going to press Button %s\n", ButtonName[i]);
 			Y = YButtonLoc[i] - FB->StepLoc;
 			printf("Button1Relative Y needs to move %i steps\n", Y);
 			if(Y >= 0){
-				FB->Move(Forward, Y);
+				FB->Move(Backward, Y);
 			}else{
-				FB->Move(Backward, -Y);
+				FB->Move(Forward, -Y);
 			}
 			X = XButtonLoc[i] - RL->StepLoc;
 			printf("Button1Relative X needs to move %i steps\n", X);
 			if(X >= 0){
-				RL->Move(Left, X);
+				RL->Move(Right, X);
 			}else{
-				RL->Move(Right, -X);
+				RL->Move(Left, -X);
 			}
 			printf("Finished Relative %s\n", ButtonName[i]);
+			MotorControlMutex.unlock();
 		}
 };
 
@@ -199,18 +306,22 @@ class Server{
 		Controller *myControl;
 		boost::asio::io_service myIO_service;
 		boost::asio::ip::tcp::acceptor *myAcceptor;
-		int myPort;
+		int myPort, pinLED1, pinLED2;
 		int NumOfButtons = 9;
 		char ButtonName[9][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n", "TakeImage\n"};
 	public:
 		std::string myFilename = "ToSendDog.bmp";
 
-		Server(Controller *inputControl, int port){
+		Server(Controller *inputControl, int port, int pLED1, int pLED2){
 			myPort = port;
 			myAcceptor = new boost::asio::ip::tcp::acceptor(
 					myIO_service, 
 					boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), myPort));
 			myControl = inputControl;
+			pinLED1 = pLED1;
+			pinLED2 = pLED2;
+			pinMode(pinLED1, OUTPUT); 
+			pinMode(pinLED2, OUTPUT); 
 		}
 
 		void Start(){
@@ -248,10 +359,16 @@ class Server{
 						}
 					}
 					if(ReceivedString == ButtonName[8]){//Take Image
+						digitalWrite(pinLED1, HIGH);//Turn on LED
+						digitalWrite(pinLED2, HIGH);//Turn on LED
+						delay(2000);
 						//clear out image buffer and take picture
 						for(int b=0; b<5; b++){
 							cap >> frame;
+							//flip(frame, frame, -1);
 						}
+						digitalWrite(pinLED1, LOW);//Turn off LED
+						digitalWrite(pinLED2, LOW);//Turn off LED
 						std::string TakePicFilename = "TakePic.png";
 						imwrite(TakePicFilename, frame);
 						FileTransfer(&mySocket, TakePicFilename);
@@ -263,27 +380,35 @@ class Server{
 								str.erase(str.end()-1, str.end());
 
 								std::string ImageFilename = "Before.png";
-								//CaptureImage(ImageFilename);
+								digitalWrite(pinLED1, HIGH);//Turn on LED
+								digitalWrite(pinLED2, HIGH);//Turn on LED
 								//clear out image buffer and take picture
 								for(int b=0; b<5; b++){
 									cap >> frame;
+									//flip(frame, frame, -1);
 								}
+								digitalWrite(pinLED1, LOW);//Turn off LED
+								digitalWrite(pinLED2, LOW);//Turn off LED
 								imwrite(ImageFilename, frame);
 								FileTransfer(&mySocket, ImageFilename);
 
 								myControl->PressButtonFromOrigin(i);
-								sleep(1);
 
 								ImageFilename = "After.png";
-								//CaptureImage(ImageFilename);
+								digitalWrite(pinLED1, HIGH);//Turn on LED
+								digitalWrite(pinLED2, HIGH);//Turn on LED
 								//clear out image buffer and take picture
 								for(int b=0; b<5; b++){
 									cap >> frame;
+									//flip(frame, frame, -1);
 								}
+								digitalWrite(pinLED1, LOW);//Turn off LED
+								digitalWrite(pinLED2, LOW);//Turn off LED
 								imwrite(ImageFilename, frame);
 								FileTransfer(&mySocket, ImageFilename);
 
-								myControl->ResetToOrigin();
+								myControl->MoveToLockPosition();
+								myControl->TurnOffSteppers();
 							}
 						}
 					}
@@ -363,58 +488,32 @@ class Server{
 		}
 };
 
-
 int main(int a, char **b){
 
 	wiringPiSetup();
 
-	Stepper ForwardBackward(0, 6, 2, 7, Controller::Forward, 10000);
-	Stepper RightLeft(3, 4, 5, 8, Controller::Left, 1000);
-	//Servo UpDown(1, 9, Controller::Up);
-	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
-	//int NumOfButtons = 8;
-	//char ButtonName[8][20]= {"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n" ,"Right\n", "Left\n", "Minus\n"};
-
-	//Server myServer(&myControl, 24957);
-
-	//myServer.Start();
+	Stepper ForwardBackward(0, 6, 2, 7, Controller::Forward, 8000);//5000 3000 8000
+	Stepper RightLeft(3, 4, 5, 8, Controller::Left, 1100);//1000
+	ServoPosition UpDown(1);
 
 
-	//if(a==5){
-		RightLeft.MoveToOrigin();//Direction Steps
-		ForwardBackward.MoveToOrigin();//Direction Steps
-		//RightLeft.Move(atoi(b[1]), atoi(b[2]));//Direction Steps
-		//ForwardBackward.Move(atoi(b[3]), atoi(b[4]));//Direction Steps
-	//}else{
-	//	printf("incorrect number of arguments\n");
+	Controller myControl(&RightLeft, &ForwardBackward, &UpDown, 13);
+	Server myServer(&myControl, 24957, 12, 14);
+	myServer.Start();
+
+	////Let user decide what button to press
+	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown, 13);
+	//while(1){
+	//	cout << "Enter desire button number\n";
+	//	int ButtonNumber;
+	//	cin >> ButtonNumber;
+	//	if( !((ButtonNumber >= 0) && (ButtonNumber <= 7)) ){
+	//		break;
+	//	}
+	//	myControl.PressButtonFromOrigin(ButtonNumber);
 	//}
+	//myControl.TurnOffSteppers();
 
-	cout << "Type anything and hit enter to turn off motors\n";
-	int wait;
-	cin >> wait;
-	RightLeft.TurnOff();
-	ForwardBackward.TurnOff();
 
 	return(0);
-
-	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown);
-
-	//myControl.PressButtonFromOrigin(myControl.SecondB);
-	//myControl.ResetToOrigin();
-	//myControl.PressButtonRelative(myControl.MenuB);
-	//myControl.PressButtonRelative(myControl.FirstB);
-	//for(int i=0; i<8; i++){
-	//	myControl.PressButtonRelative(i);
-	//}
-}
-//void CaptureImage(string name, VideoCapture *cap){
-void CaptureImage(string name){
-	VideoCapture cap(0);
-	while(!cap.open(0)){
-		printf("Waitng for Webcam to open...\n");
-		delay(200);
-	}
-	Mat frame;
-	cap >> frame;
-	imwrite(name, frame);
 }

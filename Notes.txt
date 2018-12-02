@@ -1,3 +1,9 @@
+----------12/2/18----------
+-Got Rid of the use of CMake to build executable
+----------2/4/18----------
+-Changing the Servo class to ServoContinuous and adding ServoPosition to handle the 
+	different servo configurations. I am not using a ServoPosition in my current 
+	design
 ----------2/3/18----------
 -This is a brand new version of the hardware.
 -removed pActivate from deactivating stepper motor and added a function to deactivate
