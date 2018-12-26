@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <wiringPi.h>
+#include <fstream>
 
 Server::Server(Controller *inputControl, int port, int pLED1, int pLED2){
 	myPort = port;
