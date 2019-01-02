@@ -2,28 +2,18 @@
 #include <wiringPi.h>
 #include <fstream>
 
-Server::Server(Controller *inputControl, int port, int pLED1, int pLED2){
+Server::Server(Controller *inputControl, Webcam *inputCam, int port){
 	myPort = port;
 	myAcceptor = new boost::asio::ip::tcp::acceptor(
 			myIO_service, 
 			boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), myPort));
 	myControl = inputControl;
-	pinLED1 = pLED1;
-	pinLED2 = pLED2;
-	pinMode(pinLED1, OUTPUT); 
-	pinMode(pinLED2, OUTPUT); 
+	Cam = inputCam;
 }
 
 void Server::Start(){
 	try{
-		std::cout << "Opening Webcam\n";
-		cv::VideoCapture cap(0);
-		while(!cap.open(0)){
-			printf("Waitng for Webcam to open...\n");
-			delay(200);
-		}
-		cv::Mat frame;
-		cap >> frame;
+		Cam->OpenCam();
 
 		while(1){
 			boost::asio::ip::tcp::socket mySocket(myIO_service);
@@ -45,55 +35,28 @@ void Server::Start(){
 					}
 				}
 			}
-			if(ReceivedString == ButtonName[8]){//Take Image
-				digitalWrite(pinLED1, HIGH);//Turn on LED
-				digitalWrite(pinLED2, HIGH);//Turn on LED
-				delay(2000);
-				//clear out image buffer and take picture
-				for(int b=0; b<5; b++){
-					cap >> frame;
-					//flip(frame, frame, -1);
-				}
-				digitalWrite(pinLED1, LOW);//Turn off LED
-				digitalWrite(pinLED2, LOW);//Turn off LED
-				std::string TakePicFilename = "TakePic.png";
-				imwrite(TakePicFilename, frame);
+			if(ReceivedString == ButtonName[TakeImageB]){//Take Image
+				Cam->GetRemoteScreenImg(TakePicFilename);
+//				Cam->TakePic(TakePicFilename);
 				FileTransfer(&mySocket, TakePicFilename);
 			}
 			else{
 				for(int i=0; i<NumOfButtons; i++){
 					if((ReceivedString == ButtonName[i])){
-						std::string str = ReceivedString;
-						str.erase(str.end()-1, str.end());
+						//Take before pic
+						Cam->GetRemoteScreenImg(BeforePicFilename);
+//						Cam->TakePic(BeforePicFilename);
+						FileTransfer(&mySocket, BeforePicFilename);
 
-						std::string ImageFilename = "Before.png";
-						digitalWrite(pinLED1, HIGH);//Turn on LED
-						digitalWrite(pinLED2, HIGH);//Turn on LED
-						//clear out image buffer and take picture
-						for(int b=0; b<5; b++){
-							cap >> frame;
-							//flip(frame, frame, -1);
-						}
-						digitalWrite(pinLED1, LOW);//Turn off LED
-						digitalWrite(pinLED2, LOW);//Turn off LED
-						imwrite(ImageFilename, frame);
-						FileTransfer(&mySocket, ImageFilename);
-
+						//Press the desired button
 						myControl->PressButtonFromOrigin(i);
 
-						ImageFilename = "After.png";
-						digitalWrite(pinLED1, HIGH);//Turn on LED
-						digitalWrite(pinLED2, HIGH);//Turn on LED
-						//clear out image buffer and take picture
-						for(int b=0; b<5; b++){
-							cap >> frame;
-							//flip(frame, frame, -1);
-						}
-						digitalWrite(pinLED1, LOW);//Turn off LED
-						digitalWrite(pinLED2, LOW);//Turn off LED
-						imwrite(ImageFilename, frame);
-						FileTransfer(&mySocket, ImageFilename);
+						//Take after pic
+						Cam->GetRemoteScreenImg(AfterPicFilename);
+//						Cam->TakePic(AfterPicFilename);
+						FileTransfer(&mySocket, AfterPicFilename);
 
+						//Lock and turn off motors
 						myControl->MoveToLockPosition();
 						myControl->TurnOffSteppers();
 					}

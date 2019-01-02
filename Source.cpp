@@ -19,7 +19,10 @@ int main(int a, char **b){
 
 	Controller myControl(&RightLeft, &ForwardBackward, 
 							&UpDown, EjectRemotePin);
-	Server myServer(&myControl, ServerPort, LED1Pin, LED2Pin);
+
+	Webcam Cam(LED1Pin, LED2Pin);
+							
+	Server myServer(&myControl, &Cam, ServerPort);
 	myServer.Start();
 
 	////Let user decide what button to press

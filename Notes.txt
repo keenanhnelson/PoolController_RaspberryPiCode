@@ -1,3 +1,6 @@
+----------1/1/19----------
+-Created Webcam class
+-Added functions to eliminate glare when taking a picture of the remote screen
 ----------12/25/18----------
 -Changed the Makefile to include dependencies. Although they are handmade.
 ----------12/2/18----------

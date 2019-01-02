@@ -21,9 +21,11 @@
 //Controller class
 #define EjectRemotePin 13
 
-//Server class
+//Webcam class
 #define LED1Pin 12
 #define LED2Pin 14 
+
+//Server class
 #define ServerPort 24957
 
 #endif //CONFIG_HPP
