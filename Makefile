@@ -3,8 +3,10 @@
 
 TARGET = out 
 LIBS = -pthread -lwiringPi -lboost_system -lopencv_core -lopencv_imgcodecs -lopencv_videoio
-INCLUDES = -I/usr/local/include/opencv4
+INCLUDES = -I/usr/local/include/opencv4 -I./Inc
 BUILD_DIR = ./Build
+SRC_DIR = ./Src
+INC_DIR = ./Inc
 
 CC = g++
 CFLAGS = -std=c++11 -Wall
@@ -14,35 +16,35 @@ CFLAGS = -std=c++11 -Wall
 default: $(TARGET)
 all: default
 
-SOURCES = $(wildcard *.cpp)
-HEADERS = $(wildcard *.hpp)
-OBJECTS = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(wildcard *.cpp))
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+HEADERS = $(wildcard $(INC_DIR)/*.hpp)
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 
-$(BUILD_DIR)/ServoContinuous.o: ServoContinuous.cpp ServoContinuous.hpp
+$(BUILD_DIR)/ServoContinuous.o: $(SRC_DIR)/ServoContinuous.cpp $(INC_DIR)/ServoContinuous.hpp
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@	
 	
-$(BUILD_DIR)/ServoPosition.o: ServoPosition.cpp ServoPosition.hpp
+$(BUILD_DIR)/ServoPosition.o: $(SRC_DIR)/ServoPosition.cpp $(INC_DIR)/ServoPosition.hpp
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@	
 	
-$(BUILD_DIR)/Stepper.o: Stepper.cpp Stepper.hpp
+$(BUILD_DIR)/Stepper.o: $(SRC_DIR)/Stepper.cpp $(INC_DIR)/Stepper.hpp
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	
-$(BUILD_DIR)/Webcam.o: Webcam.cpp Webcam.hpp
+$(BUILD_DIR)/Webcam.o: $(SRC_DIR)/Webcam.cpp $(INC_DIR)/Webcam.hpp
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	
-$(BUILD_DIR)/Controller.o: Controller.cpp Controller.hpp $(BUILD_DIR)/Stepper.o $(BUILD_DIR)/ServoPosition.o
+$(BUILD_DIR)/Controller.o: $(SRC_DIR)/Controller.cpp $(INC_DIR)/Controller.hpp $(BUILD_DIR)/Stepper.o $(BUILD_DIR)/ServoPosition.o
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@	
 
-$(BUILD_DIR)/Server.o: Server.cpp Server.hpp $(BUILD_DIR)/Controller.o $(BUILD_DIR)/Webcam.o
+$(BUILD_DIR)/Server.o: $(SRC_DIR)/Server.cpp $(INC_DIR)/Server.hpp $(BUILD_DIR)/Controller.o $(BUILD_DIR)/Webcam.o
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@	
 	
-$(BUILD_DIR)/Source.o: Source.cpp Config.hpp $(BUILD_DIR)/Server.o
+$(BUILD_DIR)/Source.o: $(SRC_DIR)/Source.cpp $(INC_DIR)/Config.hpp $(BUILD_DIR)/Server.o
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@	
 
