@@ -20,7 +20,7 @@ class Server{
 			"One\n", "Two\n", "Three\n", "Plus\n" ,"Menu\n",
 			"Right\n", "Left\n", "Minus\n", "TakeImage\n",
 		};
-		const std::string ImgLoc = "./Img/";
+		const std::string ImgLoc = "/home/pi/JeffPoolController/Main/Img/";
 		const std::string TakePicFilename = ImgLoc + "TakePic.png";
 		const std::string BeforePicFilename = ImgLoc + "Before.png";
 		const std::string AfterPicFilename = ImgLoc + "After.png";

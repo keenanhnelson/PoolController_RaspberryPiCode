@@ -2,6 +2,8 @@
 #include "Webcam.hpp"
 #include <wiringPi.h>
 
+#define CAM_CAL_WAIT 1500 //The amount of time (in ms) to wait for the camera to self calibrated after the LEDs are turned on
+
 //Initializes pins for controlling the LEDs
 Webcam::Webcam(int pLED1, int pLED2){
 	pinLED1 = pLED1;
@@ -36,7 +38,7 @@ void Webcam::GetRemoteScreenImg(std::string PicFilename){
 void Webcam::TakePicsWithAlternateLEDs(cv::Mat *OutImg1, cv::Mat *OutImg2){
 	digitalWrite(pinLED1, HIGH);//Turn on LED
 	digitalWrite(pinLED2, LOW);//Turn off LED
-	delay(2000);//Make sure camera has enough time to self calibrate
+	delay(CAM_CAL_WAIT);//Make sure camera has enough time to self calibrate
 	*OutImg1 = TakePic();
 	
 	digitalWrite(pinLED1, LOW);//Turn off LED
@@ -52,7 +54,7 @@ void Webcam::TakePicsWithAlternateLEDs(cv::Mat *OutImg1, cv::Mat *OutImg2){
 cv::Mat Webcam::TakePicWithLED(bool LED1State, bool LED2State){
 	digitalWrite(pinLED1, LED1State);//Turn on/off LED
 	digitalWrite(pinLED2, LED2State);//Turn on/off LED
-	delay(2000);
+	delay(CAM_CAL_WAIT);
 	
 	cv::Mat Frame = TakePic();
 	
@@ -63,22 +65,43 @@ cv::Mat Webcam::TakePicWithLED(bool LED1State, bool LED2State){
 
 //Copys non-glare from one image to the glare part of another
 cv::Mat Webcam::RemoveLED_Glare(cv::Mat ImgInput1, cv::Mat ImgInput2){
-	cv::Rect TopLeft(160,120,70,70);
-	cv::Rect TopRight(340,130,70,70);
-	cv::Rect BotRight(330,260,70,70);
-	cv::Rect BotLeft(155,250,70,70);
+	//LED set that lights up in a square shape
+	//cv::Rect TopLeft(160,120,70,70);
+	//cv::Rect TopRight(340,130,70,70);
+	//cv::Rect BotRight(330,260,70,70);
+	//cv::Rect BotLeft(155,250,70,70);
+    //
+	//cv::Mat ImgTopLeft = ImgInput2(TopLeft);
+	//cv::Mat ImgTopRight = ImgInput2(TopRight);
+	//cv::Mat ImgBotRight = ImgInput2(BotRight);
+	//cv::Mat ImgBotLeft = ImgInput2(BotLeft);
+	//
+	//ImgTopLeft.copyTo(ImgInput1(TopLeft));
+	//ImgTopRight.copyTo(ImgInput1(TopRight));
+	//ImgBotRight.copyTo(ImgInput1(BotRight));
+	//ImgBotLeft.copyTo(ImgInput1(BotLeft));
+	//
+	//return(ImgInput1);
 	
-	cv::Mat ImgTopLeft = ImgInput2(TopLeft);
-	cv::Mat ImgTopRight = ImgInput2(TopRight);
-	cv::Mat ImgBotRight = ImgInput2(BotRight);
-	cv::Mat ImgBotLeft = ImgInput2(BotLeft);
 	
-	ImgTopLeft.copyTo(ImgInput1(TopLeft));
-	ImgTopRight.copyTo(ImgInput1(TopRight));
-	ImgBotRight.copyTo(ImgInput1(BotRight));
-	ImgBotLeft.copyTo(ImgInput1(BotLeft));
 	
-	return(ImgInput1);
+	//LED set that lights up in a diamond shape
+	cv::Rect Top(250,90,70,70);
+	cv::Rect Right(420,190,70,70);
+	cv::Rect Bot(260,300,70,70);
+	cv::Rect Left(80,200,70,70);
+	
+	cv::Mat ImgTop = ImgInput1(Top);
+	cv::Mat ImgRight = ImgInput1(Right);
+	cv::Mat ImgBot = ImgInput1(Bot);
+	cv::Mat ImgLeft = ImgInput1(Left);
+	
+	ImgTop.copyTo(ImgInput2(Top));
+	ImgRight.copyTo(ImgInput2(Right));
+	ImgBot.copyTo(ImgInput2(Bot));
+	ImgLeft.copyTo(ImgInput2(Left));
+	
+	return(ImgInput2);
 }
 
 //clear out image buffer and take picture

@@ -23,6 +23,7 @@ void Controller::HandleEjectStatus(int EjectButtonPin){//Thread use only
 			MoveToUnlockPosition();
 			LockPositionState = 1;
 			TurnOffSteppers();
+			TurnOffServo();
 			MotorControlMutex.unlock();
 		}
 		if(digitalRead(EjectButtonPin) == 0 && LockPositionState == 1){
@@ -30,6 +31,7 @@ void Controller::HandleEjectStatus(int EjectButtonPin){//Thread use only
 			MoveToLockPosition();
 			LockPositionState = 0;
 			TurnOffSteppers();
+			TurnOffServo();
 			MotorControlMutex.unlock();
 		}
 	}
@@ -52,6 +54,9 @@ void Controller::MoveToUnlockPosition(){
 void Controller::TurnOffSteppers(){
 	RL->TurnOff();
 	FB->TurnOff();
+}
+void Controller::TurnOffServo(){
+	UD->TurnOff();
 }
 void Controller::TurnOnSteppersToStabilizePosition(){
 	RL->TurnOnStepperToStabilizePosition();

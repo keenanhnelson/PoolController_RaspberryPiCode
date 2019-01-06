@@ -2,6 +2,9 @@
 -Created Webcam class
 -Added functions to eliminate glare when taking a picture of the remote screen
 -Changed the file structure and the Makefile to reflect those changes
+-Use '/etc/rc.local' file to execute commands on startup
+-Edit '/etc/ssh/sshd_config' file to change the Port value from 22 to something more safe if ssh is remotely is needed.
+-Check the following file '/var/log/auth.log' for failed login attempts
 ----------12/25/18----------
 -Changed the Makefile to include dependencies. Although they are handmade.
 ----------12/2/18----------

@@ -29,6 +29,7 @@ class Controller{
 		void MoveToLockPosition();
 		void MoveToUnlockPosition();
 		void TurnOffSteppers();
+		void TurnOffServo();
 		void TurnOnSteppersToStabilizePosition();
 		void PressButtonFromOrigin(int i);
 		void PressButtonRelative(int i);

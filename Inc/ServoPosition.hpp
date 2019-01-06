@@ -9,5 +9,6 @@ class ServoPosition{
 		void Move(int Position, int Duration);
 		void MoveToOrigin();
 		void LockPosition();
+		void TurnOff();
 };
 #endif //SERVO_POSITION_HPP
