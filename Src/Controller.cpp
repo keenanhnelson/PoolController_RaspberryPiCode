@@ -43,8 +43,8 @@ void Controller::ResetToOrigin(){
 }
 void Controller::MoveToLockPosition(){
 	ResetToOrigin();
-	FB->Move(Controller::Backward, 12);
-	UD->LockPosition();
+	FB->Move(Controller::Backward, YButtonLoc[LockPos]);
+	UD->Move(UpDownServo[LockPos], 500);
 }
 void Controller::MoveToUnlockPosition(){
 	UD->MoveToOrigin();

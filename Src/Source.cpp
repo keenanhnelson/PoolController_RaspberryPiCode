@@ -23,21 +23,22 @@ int main(int a, char **b){
 	Webcam Cam(LED1Pin, LED2Pin);
 							
 	Server myServer(&myControl, &Cam, ServerPort);
-	myServer.Start();
+	myServer.Start();//Stay here forever
 
-	////Let user decide what button to press
-	//Controller myControl(&RightLeft, &ForwardBackward, &UpDown, 13);
+
+	//The following code is for debugging only
+	//std::cout << "Turning on steppers. Press enter to continue\n";
+	//myControl.TurnOnSteppersToStabilizePosition();
+	//
+	//int ButtonPos = 0;
 	//while(1){
-	//	cout << "Enter desire button number\n";
-	//	int ButtonNumber;
-	//	cin >> ButtonNumber;
-	//	if( !((ButtonNumber >= 0) && (ButtonNumber <= 7)) ){
-	//		break;
-	//	}
-	//	myControl.PressButtonFromOrigin(ButtonNumber);
+	//	std::cout << "Choose a position from 0 to 7\n";
+	//	std::cin >> ButtonPos;
+	//	myControl.PressButtonFromOrigin(ButtonPos);
+	//	myControl.MoveToLockPosition();
+	//	myControl.TurnOffSteppers();
+	//	myControl.TurnOffServo();
 	//}
-	//myControl.TurnOffSteppers();
-
 
 	return(0);
 }

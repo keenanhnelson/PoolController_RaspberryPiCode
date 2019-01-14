@@ -10,6 +10,7 @@ class Webcam{
 		void OpenCam();
 		//void TakePic(std::string PicFilename);
 		void GetRemoteScreenImg(std::string PicFilename);
+		void LED_State(bool LED1State, bool LED2State);
 	private:
 		cv::VideoCapture *cap;
 		int pinLED1, pinLED2;

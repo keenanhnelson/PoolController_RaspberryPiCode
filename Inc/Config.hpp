@@ -13,7 +13,7 @@
 #define RL_SignalPin 4
 #define RL_DirectionPin 5
 #define RL_EndStopPin 8
-#define RL_StepPeriod 1100
+#define RL_StepPeriod 1400
 
 //Up down servo control
 #define UpDn_SignalPin 1

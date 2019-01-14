@@ -36,30 +36,25 @@ void Webcam::GetRemoteScreenImg(std::string PicFilename){
 
 //Take two pictures in quick succession while alternating LEDs
 void Webcam::TakePicsWithAlternateLEDs(cv::Mat *OutImg1, cv::Mat *OutImg2){
-	digitalWrite(pinLED1, HIGH);//Turn on LED
-	digitalWrite(pinLED2, LOW);//Turn off LED
+	LED_State(HIGH, LOW);
 	delay(CAM_CAL_WAIT);//Make sure camera has enough time to self calibrate
 	*OutImg1 = TakePic();
 	
-	digitalWrite(pinLED1, LOW);//Turn off LED
-	digitalWrite(pinLED2, HIGH);//Turn on LED
+	LED_State(LOW, HIGH);
 	*OutImg2 = TakePic();
 	
 	//Turn off LEDs
-	digitalWrite(pinLED1, LOW);//Turn off LED
-	digitalWrite(pinLED2, LOW);//Turn off LED
+	LED_State(LOW, LOW);
 }
 
 //Decide which led will be on when picture is taken
 cv::Mat Webcam::TakePicWithLED(bool LED1State, bool LED2State){
-	digitalWrite(pinLED1, LED1State);//Turn on/off LED
-	digitalWrite(pinLED2, LED2State);//Turn on/off LED
+	LED_State(LED1State, LED2State);
 	delay(CAM_CAL_WAIT);
 	
 	cv::Mat Frame = TakePic();
 	
-	digitalWrite(pinLED1, LOW);//Turn off LED
-	digitalWrite(pinLED2, LOW);//Turn off LED
+	LED_State(LOW, LOW);
 	return(Frame);
 }
 
@@ -86,10 +81,10 @@ cv::Mat Webcam::RemoveLED_Glare(cv::Mat ImgInput1, cv::Mat ImgInput2){
 	
 	
 	//LED set that lights up in a diamond shape
-	cv::Rect Top(250,90,70,70);
-	cv::Rect Right(420,190,70,70);
-	cv::Rect Bot(260,300,70,70);
-	cv::Rect Left(80,200,70,70);
+	cv::Rect Top(250,70,70,70);
+	cv::Rect Right(420,170,70,70);
+	cv::Rect Bot(260,280,70,70);
+	cv::Rect Left(80,180,70,70);
 	
 	cv::Mat ImgTop = ImgInput1(Top);
 	cv::Mat ImgRight = ImgInput1(Right);
@@ -111,4 +106,9 @@ cv::Mat Webcam::TakePic(){
 		(*cap) >> Frame;
 	}
 	return(Frame);
+}
+
+void Webcam::LED_State(bool LED1State, bool LED2State){
+	digitalWrite(pinLED1, LED1State);//HIGH turns led on. LOW turns led off
+	digitalWrite(pinLED2, LED2State);//HIGH turns led on. LOW turns led off
 }

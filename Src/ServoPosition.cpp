@@ -15,13 +15,7 @@ void ServoPosition::Move(int Position, int Duration){
 }
 
 void ServoPosition::MoveToOrigin(){
-	pwmWrite(pinSignal, 50);
-	delay(500);
-	TurnOff();//Make it so the servo doesn't twitch
-}
-
-void ServoPosition::LockPosition(){
-	pwmWrite(pinSignal, 75);//75
+	pwmWrite(pinSignal, OriginPos);
 	delay(500);
 	TurnOff();//Make it so the servo doesn't twitch
 }

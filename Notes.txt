@@ -1,3 +1,7 @@
+----------1/13/19----------
+-Need to edit "/etc/wpa_supplicant/wpa_supplicant.conf" in order to connect to wifi
+-Made slight calibration changes so buttons would be pressed properly
+-Changed lock position
 ----------1/1/19----------
 -Created Webcam class
 -Added functions to eliminate glare when taking a picture of the remote screen
