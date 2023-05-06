@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Webcam.hpp"
-#include <wiringPi.h>
+#include "pigpio.h"
 
 #define CAM_CAL_WAIT 1500 //The amount of time (in ms) to wait for the camera to self calibrated after the LEDs are turned on
 
@@ -8,8 +8,8 @@
 Webcam::Webcam(int pLED1, int pLED2){
 	pinLED1 = pLED1;
 	pinLED2 = pLED2;
-	pinMode(pinLED1, OUTPUT); 
-	pinMode(pinLED2, OUTPUT); 
+	gpioSetMode(pinLED1, PI_OUTPUT); 
+	gpioSetMode(pinLED2, PI_OUTPUT); 
 }
 
 Webcam::~Webcam(){
@@ -21,7 +21,7 @@ void Webcam::OpenCam(){
 	cap = new cv::VideoCapture(0);
 	while(!cap->open(0)){
 		printf("Waiting for Webcam to open...\n");
-		delay(200);
+		gpioDelay(200*1000);
 	}
 }
 
@@ -36,25 +36,25 @@ void Webcam::GetRemoteScreenImg(std::string PicFilename){
 
 //Take two pictures in quick succession while alternating LEDs
 void Webcam::TakePicsWithAlternateLEDs(cv::Mat *OutImg1, cv::Mat *OutImg2){
-	LED_State(HIGH, LOW);
-	delay(CAM_CAL_WAIT);//Make sure camera has enough time to self calibrate
+	LED_State(1, 0);
+	gpioDelay(CAM_CAL_WAIT*1000);//Make sure camera has enough time to self calibrate
 	*OutImg1 = TakePic();
 	
-	LED_State(LOW, HIGH);
+	LED_State(0, 1);
 	*OutImg2 = TakePic();
 	
 	//Turn off LEDs
-	LED_State(LOW, LOW);
+	LED_State(0, 0);
 }
 
 //Decide which led will be on when picture is taken
 cv::Mat Webcam::TakePicWithLED(bool LED1State, bool LED2State){
 	LED_State(LED1State, LED2State);
-	delay(CAM_CAL_WAIT);
+	gpioDelay(CAM_CAL_WAIT*1000);
 	
 	cv::Mat Frame = TakePic();
 	
-	LED_State(LOW, LOW);
+	LED_State(0, 0);
 	return(Frame);
 }
 
@@ -109,6 +109,6 @@ cv::Mat Webcam::TakePic(){
 }
 
 void Webcam::LED_State(bool LED1State, bool LED2State){
-	digitalWrite(pinLED1, LED1State);//HIGH turns led on. LOW turns led off
-	digitalWrite(pinLED2, LED2State);//HIGH turns led on. LOW turns led off
+	gpioWrite(pinLED1, LED1State);//1 turns led on. 0 turns led off
+	gpioWrite(pinLED2, LED2State);//1 turns led on. 0 turns led off
 }

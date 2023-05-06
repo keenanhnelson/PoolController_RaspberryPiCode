@@ -1,0 +1,42 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make && rsync ./Build/out jeff@jeffpi:~/Documents/Remote",
+            "problemMatcher": []
+        },
+        {
+            "label": "run gdbserver",
+            "type": "shell",
+            "command": "ssh jeff@jeffpi 'sudo kill $(sudo lsof -ti :2000); sudo killall out; cd ~/Documents/Remote && sudo gdbserver localhost:2000 ./out'",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "build"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+              }
+        },
+        {
+            "label": "keenan run program",
+            "type": "shell",
+            "command": "ssh jeff@jeffpi 'sudo killall out; cd ~/Documents/Remote && sudo ./out'",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "build"
+            ]
+        }
+    ]
+}

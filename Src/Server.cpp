@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include <wiringPi.h>
+#include "pigpio.h"
 #include <fstream>
 
 Server::Server(Controller *inputControl, Webcam *inputCam, int port){

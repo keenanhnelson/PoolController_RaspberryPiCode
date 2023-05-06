@@ -1,5 +1,5 @@
 #include "Controller.hpp"
-#include <wiringPi.h>
+#include "pigpio.h"
 
 Controller::Controller(Stepper *inputRL, Stepper *inputFB, ServoPosition *inputUD, 
 			int inputEjectButtonPin){
@@ -13,12 +13,12 @@ Controller::Controller(Stepper *inputRL, Stepper *inputFB, ServoPosition *inputU
 }
 void Controller::HandleEjectStatus(int EjectButtonPin){//Thread use only
 	//Setup eject button
-	pinMode(EjectButtonPin, INPUT);
-	pullUpDnControl(EjectButtonPin, PUD_UP);
+	gpioSetMode(EjectButtonPin, PI_INPUT);
+	gpioSetPullUpDown(EjectButtonPin, PI_PUD_UP);
 	bool LockPositionState = 0;
 
 	while(1){
-		if(digitalRead(EjectButtonPin) == 0 && LockPositionState == 0){
+		if(gpioRead(EjectButtonPin) == 0 && LockPositionState == 0){
 			MotorControlMutex.lock();
 			MoveToUnlockPosition();
 			LockPositionState = 1;
@@ -26,7 +26,7 @@ void Controller::HandleEjectStatus(int EjectButtonPin){//Thread use only
 			TurnOffServo();
 			MotorControlMutex.unlock();
 		}
-		if(digitalRead(EjectButtonPin) == 0 && LockPositionState == 1){
+		if(gpioRead(EjectButtonPin) == 0 && LockPositionState == 1){
 			MotorControlMutex.lock();
 			MoveToLockPosition();
 			LockPositionState = 0;

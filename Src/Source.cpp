@@ -1,5 +1,5 @@
 #include <iostream>
-#include <wiringPi.h>
+#include "pigpio.h"
 #include "Stepper.hpp"
 #include "ServoPosition.hpp"
 #include "Controller.hpp"
@@ -8,7 +8,7 @@
 
 int main(int a, char **b){
 
-	wiringPiSetup();
+	if(gpioInitialise() < 0) return 1;
 
 	Stepper ForwardBackward(FB_ActivatePin, FB_SignalPin, 
 							FB_DirectionPin, FB_EndStopPin, 
@@ -24,6 +24,24 @@ int main(int a, char **b){
 							
 	Server myServer(&myControl, &Cam, ServerPort);
 	myServer.Start();//Stay here forever
+
+	// myControl.MoveToLockPosition();
+	// int pwmValue;
+	// while(1){
+	// 	std::cin >> pwmValue;
+	// 	if(pwmValue < 500 || pwmValue>2500){
+	// 		break;
+	// 	}
+	// 	UpDown.Move(pwmValue, 2000);
+	// }
+	// myControl.TurnOffSteppers();
+	// myControl.TurnOffServo();
+
+
+
+
+
+
 
 
 	//The following code is for debugging only

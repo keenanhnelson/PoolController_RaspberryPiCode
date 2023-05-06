@@ -1,15 +1,14 @@
-#List of .cpp files: Controller.cpp  Server.cpp  ServoContinuous.cpp  ServoPosition.cpp  Source.cpp Stepper.cpp Webcam.cpp
-#List of .hpp files: Config.hpp  Controller.hpp  Server.hpp  ServoContinuous.hpp  ServoPosition.hpp  Stepper.hpp Webcam.hpp
-
 TARGET = out 
-LIBS = -pthread -lwiringPi -lboost_system -lopencv_core -lopencv_imgcodecs -lopencv_videoio
-INCLUDES = -I/usr/local/include/opencv4 -I./Inc
+LIBS_DIR = -L ~/Documents/opencv/build/OpencvInstall/lib -L ~/Documents/pigpio-master 
+LIBS = -pthread -lpigpio -lrt -lopencv_core -lopencv_imgcodecs -lopencv_videoio
+INCLUDES = -I ~/Documents/opencv/build/OpencvInstall/include/opencv4 -I ~/Documents/pigpio-master -I ./Inc -I ~/Documents/boost_1_82_0
 BUILD_DIR = ./Build
 SRC_DIR = ./Src
 INC_DIR = ./Inc
+EXTRA_LINK_OPTIONS = -Wl,-rpath-link,/home/keenan/Documents/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/lib/aarch64-linux-gnu -Wl,-rpath-link,/home/keenan/Documents/opencv/build/OpencvInstall/lib
 
-CC = g++
-CFLAGS = -std=c++11 -Wall
+CC = ~/Documents/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-g++
+CFLAGS = -std=c++11 -g
 
 .PHONY: default all clean
 
@@ -54,9 +53,7 @@ $(BUILD_DIR)/Source.o: $(SRC_DIR)/Source.cpp $(INC_DIR)/Config.hpp $(BUILD_DIR)/
 #	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
+	$(CC) $(OBJECTS) -Wall $(EXTRA_LINK_OPTIONS) $(LIBS_DIR) $(LIBS) -o $(BUILD_DIR)/$@
 
 clean:
-	-rm -f *.o
-	-rm -f $(TARGET)
 	-rm -r $(BUILD_DIR)

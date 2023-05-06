@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "attach to gdbserver",
+            //"preLaunchTask": "run gdbserver",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/keenan/Documents/PoolController_RaspberryPiCode/Build/out",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/home/keenan/Documents/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-gdb",
+            "miDebuggerArgs": "-ex 'target remote jeffpi:2000'"
+        }
+    ]
+}
