@@ -9,7 +9,7 @@
             //"preLaunchTask": "run gdbserver",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/keenan/Documents/PoolController_RaspberryPiCode/Build/out",
+            "program": "${env:PoolControllerProjectPath}/RaspberryPiCode/Build/out",
             "args": [],
             "stopAtEntry": true,
             "cwd": "${fileDirname}",
@@ -23,8 +23,8 @@
                     "ignoreFailures": true
                 }
             ],
-            "miDebuggerPath": "/home/keenan/Documents/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-gdb",
-            "miDebuggerArgs": "-ex 'target remote jeffpi:2000'"
+            "miDebuggerPath": "${env:PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-gdb",
+            "miDebuggerArgs": "-ex 'target remote ${env:PiHostname}:2000'"
         }
     ]
 }

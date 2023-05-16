@@ -1,13 +1,13 @@
 TARGET = out 
-LIBS_DIR = -L ~/Documents/opencv/build/OpencvInstall/lib -L ~/Documents/pigpio-master 
-LIBS = -pthread -lpigpio -lrt -lopencv_core -lopencv_imgcodecs -lopencv_videoio
-INCLUDES = -I ~/Documents/opencv/build/OpencvInstall/include/opencv4 -I ~/Documents/pigpio-master -I ./Inc -I ~/Documents/boost_1_82_0
+LIBS_DIR = -L 
+LIBS = -lrt -lopencv_core -lopencv_imgcodecs -lopencv_videoio -lpigpio -pthread
+INCLUDES = -I ./Inc -I ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/include/opencv4 -I ${PoolControllerProjectPath}/boost_1_82_0
 BUILD_DIR = ./Build
 SRC_DIR = ./Src
 INC_DIR = ./Inc
-EXTRA_LINK_OPTIONS = -Wl,-rpath-link,/home/keenan/Documents/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/lib/aarch64-linux-gnu -Wl,-rpath-link,/home/keenan/Documents/opencv/build/OpencvInstall/lib
+EXTRA_LINK_OPTIONS = -Wl,-rpath-link,${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/lib/aarch64-linux-gnu
 
-CC = ~/Documents/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-g++
+CC = ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-g++
 CFLAGS = -std=c++11 -g
 
 .PHONY: default all clean
