@@ -12,7 +12,7 @@
         {
             "label": "run gdbserver",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo gdbserver localhost:2000 ./Build/out'",
+            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo gdbserver localhost:2000 ./Build/out'",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -26,9 +26,9 @@
               }
         },
         {
-            "label": "keenan run program",
+            "label": "run program",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo killall out; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out'",
+            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out'",
             "problemMatcher": [],
             "group": {
                 "kind": "test",
