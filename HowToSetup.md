@@ -235,23 +235,82 @@ cd ${PoolControllerProjectPath}/RaspberryPiCode
 make
 ```
 
-3. Transfer the executable to the Raspberry Pi.
+3. Create the project directory structure on the Raspberry Pi. Which will support Raspberry Pi self build later
 
 ```
-ssh ${PiUsername}@${PiHostname} "mkdir -p ${PoolControllerProjectPiPath}/Img"
-rsync ./Build/out ${PiUsername}@${PiHostname}:${PoolControllerProjectPiPath}
+ssh ${PiUsername}@${PiHostname} "mkdir -p ${PoolControllerProjectPiPath}/RaspberryPiCode/Img"
+ssh ${PiUsername}@${PiHostname} "mkdir -p ${PoolControllerProjectPiPath}/RaspberryPiCode/Build"
+```
+
+4. Transfer the executable to the Raspberry Pi
+
+```
+rsync ./Build/out ${PiUsername}@${PiHostname}:${PoolControllerProjectPiPath}/RaspberryPiCode/Build
 ```
 
 4. Start the program manually
 
 ```
-ssh ${PiUsername}@${PiHostname} "cd ${PoolControllerProjectPiPath} && sudo ${PoolControllerProjectPiPath}/out"
+ssh ${PiUsername}@${PiHostname} "cd ${PoolControllerProjectPiPath} && sudo ${PoolControllerProjectPiPath}/RaspberryPiCode/Build/out"
 ```
 
 5. Setup autostart by sshing into the Raspberry Pi and adding the following line in /etc/rc.local right before `exit 0`. Make sure to substitute `${PoolControllerProjectPiPath}` with the expanded path since that variable doesn't exist on the Rasbperry Pi
 
 ```
-cd ${PoolControllerProjectPiPath} && sudo ./out &
+cd ${PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out &
+```
+
+## Setup Raspberry Pi native build
+
+Cross compiling should be used most of the time in order to quickly build, but sometimes it isn't available so building the code on the Raspberry Pi is required. This assumes that the cross compiled steps were already followed
+
+1. SSH into Raspberry Pi
+
+```
+ssh ${PiUsername}@${PiHostname}
+```
+
+2. Setup project folder location so the Raspberry Pi knows where the project is
+
+```
+echo export PoolControllerProjectPiPath=/home/jeff/Documents/PoolController >> ~/.bashrc  # Project path on Raspberry Pi
+source ~/.bashrc
+mkdir -p $PoolControllerProjectPiPath
+```
+
+3. Setup boost. Extracting the boost library compressed file can take around 5 minutes
+
+```
+wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.bz2 -P ~/Downloads
+tar --bzip2 -xf ~/Downloads/boost_1_82_0.tar.bz2 --directory ${PoolControllerProjectPiPath}
+```
+
+4. Remove any existing files in the project code location. Make sure there is nothing important in it before deleting
+
+```
+sudo rm -r ${PoolControllerProjectPiPath}/RaspberryPiCode/*
+```
+
+5. Download the source code
+
+```
+git clone https://github.com/keenanhnelson/PoolController_RaspberryPiCode.git ${PoolControllerProjectPiPath}/RaspberryPiCode
+cd ${PoolControllerProjectPiPath}/RaspberryPiCode
+```
+
+6. Configure the makefile. Comment out lines 3, 4, and 5 inside the `Makefile` file and uncomment out lines 7, 8, and 9 which will setup compilation on the Raspberry Pi
+
+7. Build the project
+
+```
+cd ${PoolControllerProjectPiPath}/RaspberryPiCode
+make
+```
+
+8. Run the code
+
+```
+sudo ./Build/out
 ```
 
 ## Portforwarding

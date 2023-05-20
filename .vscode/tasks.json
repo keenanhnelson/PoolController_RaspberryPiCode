@@ -6,13 +6,13 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "make && rsync ./Build/out ${env:PiUsername}@${env:PiHostname}:${env:PoolControllerProjectPiPath}",
+            "command": "make && rsync ./Build/out ${env:PiUsername}@${env:PiHostname}:${env:PoolControllerProjectPiPath}/RaspberryPiCode/Build",
             "problemMatcher": []
         },
         {
             "label": "run gdbserver",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; cd ${env:PoolControllerProjectPiPath} && sudo gdbserver localhost:2000 ./out'",
+            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo gdbserver localhost:2000 ./Build/out'",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -28,7 +28,7 @@
         {
             "label": "keenan run program",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo killall out; cd ${env:PoolControllerProjectPiPath} && sudo ./out'",
+            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo killall out; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out'",
             "problemMatcher": [],
             "group": {
                 "kind": "test",

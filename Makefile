@@ -1,13 +1,19 @@
+#System specific options. Uncomment either Cross compiled or Raspberry Pi native compiled.
+#Cross compiled
+INCLUDES = -I ./Inc -I ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/include/opencv4 -I ${PoolControllerProjectPath}/boost_1_82_0
+EXTRA_LINK_OPTIONS = -Wl,-rpath-link,${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/lib/aarch64-linux-gnu
+CC = ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-g++
+#Raspberry Pi native compiled
+#INCLUDES = -I ./Inc -I /usr/include/opencv4 -I ${PoolControllerProjectPiPath}/boost_1_82_0
+#EXTRA_LINK_OPTIONS = 
+#CC = g++
+
 TARGET = out 
 LIBS_DIR = -L 
 LIBS = -lrt -lopencv_core -lopencv_imgcodecs -lopencv_videoio -lpigpio -pthread
-INCLUDES = -I ./Inc -I ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/include/opencv4 -I ${PoolControllerProjectPath}/boost_1_82_0
 BUILD_DIR = ./Build
 SRC_DIR = ./Src
 INC_DIR = ./Inc
-EXTRA_LINK_OPTIONS = -Wl,-rpath-link,${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/aarch64-linux-gnu/libc/usr/lib/aarch64-linux-gnu
-
-CC = ${PoolControllerProjectPath}/cross-pi-gcc-10.3.0-64/bin/aarch64-linux-gnu-g++
 CFLAGS = -std=c++11 -g
 
 .PHONY: default all clean
