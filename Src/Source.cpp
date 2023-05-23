@@ -5,6 +5,7 @@
 #include "Controller.hpp"
 #include "Server.hpp"
 #include "Config.hpp"
+#include "ServerInfoPrivate.hpp"
 
 int main(int a, char **b){
 

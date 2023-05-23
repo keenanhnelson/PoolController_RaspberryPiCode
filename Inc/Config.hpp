@@ -25,7 +25,4 @@
 #define LED1Pin 10
 #define LED2Pin 11 
 
-//Server class
-#define ServerPort 24957
-
 #endif //CONFIG_HPP

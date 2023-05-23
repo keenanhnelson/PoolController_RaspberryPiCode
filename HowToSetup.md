@@ -300,14 +300,16 @@ cd ${PoolControllerProjectPiPath}/RaspberryPiCode
 
 6. Configure the makefile. Comment out lines 3, 4, and 5 inside the `Makefile` file and uncomment out lines 7, 8, and 9 which will setup compilation on the Raspberry Pi
 
-7. Build the project
+7. Make sure to modify the server port number in `Inc/ServerInfoPrivate.hpp` to something unique to improve security
+
+8. Build the project
 
 ```
 cd ${PoolControllerProjectPiPath}/RaspberryPiCode
 make
 ```
 
-8. Run the code
+9. Run the code
 
 ```
 sudo ./Build/out
