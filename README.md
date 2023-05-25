@@ -1,3 +1,7 @@
+# Pool Controller - Raspberry Pi Code
+
+This is the code that runs on the Raspberry Pi which controls a camera, motors, lights, and limits switches which are used to press physical buttons on a pool remote. This code waits for commands from an Android app which can be anywhere in the world with internet access. This allows the user to control their pool from anywhere in the world. Below are the instructions for how to setup the code on the Raspberry Pi along with using Ubuntu to cross compile in order to speed up development.
+
 # Setup devices
 
 ## Image Raspberry Pi
