@@ -12,7 +12,7 @@ class Webcam{
 		void GetRemoteScreenImg(std::string PicFilename);
 		void LED_State(bool LED1State, bool LED2State);
 	private:
-		cv::VideoCapture *cap;
+		cv::VideoCapture *cap=NULL;
 		int pinLED1, pinLED2;
 		
 		void TakePicsWithAlternateLEDs(cv::Mat *OutImg1, cv::Mat *OutImg2);

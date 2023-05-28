@@ -26,6 +26,24 @@ int main(int a, char **b){
 	Server myServer(&myControl, &Cam, ServerPort);
 	myServer.Start();//Stay here forever
 
+
+
+
+	// //The following code is for debugging stepper motor speed
+	// myControl.TurnOnSteppersToStabilizePosition();
+	// UpDown.MoveToOrigin();
+	// for(int i=1300; i<2000; i+=50){
+	// 	std::cout << "Setting speed to " << i << "\n" << std::flush;
+	// 	RightLeft.SetMoveSpeed(i);
+	// 	RightLeft.Move(Controller::Right, 350);
+	// 	RightLeft.MoveToOrigin();
+	// }
+	// myControl.TurnOffSteppers();
+	// myControl.TurnOffServo();
+
+
+
+	//The following code is for debugging servo position
 	// myControl.MoveToLockPosition();
 	// int pwmValue;
 	// while(1){
@@ -37,9 +55,6 @@ int main(int a, char **b){
 	// }
 	// myControl.TurnOffSteppers();
 	// myControl.TurnOffServo();
-
-
-
 
 
 

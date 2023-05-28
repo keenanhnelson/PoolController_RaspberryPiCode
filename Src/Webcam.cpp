@@ -13,7 +13,9 @@ Webcam::Webcam(int pLED1, int pLED2){
 }
 
 Webcam::~Webcam(){
-	delete cap;
+	if(cap != NULL){
+		delete cap;
+	}
 }
 
 void Webcam::OpenCam(){
