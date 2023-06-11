@@ -6,13 +6,13 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "make && rsync ./Build/out ${env:PiUsername}@${env:PiHostname}:${env:PoolControllerProjectPiPath}/RaspberryPiCode/Build",
+            "command": "make && rsync -e 'ssh -p ${env:PiSshPort}' ./Build/out ${env:PiUsername}@${env:PiHostname}:${env:PoolControllerProjectPiPath}/RaspberryPiCode/Build",
             "problemMatcher": []
         },
         {
             "label": "run gdbserver",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo gdbserver localhost:2000 ./Build/out'",
+            "command": "ssh -p ${env:PiSshPort} ${env:PiUsername}@${env:PiHostname} 'sudo kill $(sudo lsof -ti :2000); sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo gdbserver localhost:2000 ./Build/out'",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -28,7 +28,7 @@
         {
             "label": "run program",
             "type": "shell",
-            "command": "ssh ${env:PiUsername}@${env:PiHostname} 'sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out'",
+            "command": "ssh -p ${env:PiSshPort} ${env:PiUsername}@${env:PiHostname} 'sudo killall out; sleep 1; cd ${env:PoolControllerProjectPiPath}/RaspberryPiCode && sudo ./Build/out'",
             "problemMatcher": [],
             "group": {
                 "kind": "test",

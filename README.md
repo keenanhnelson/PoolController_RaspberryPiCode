@@ -108,13 +108,14 @@ sudo apt install libncurses5 python2.7-dev
 sudo apt install libgtk-3-dev
 ```
 
-5. Create a series of variables to store project locations and ssh names. Make sure to use an absolute path and to not include the tilde "~" as it won't work in cmake. Make sure to change these variables to match the desired user preference.
+5. Create a series of variables to store project locations and ssh variables. Make sure to use an absolute path and to not include the tilde "~" as it won't work in cmake. Make sure to change these variables to match the desired user preference.
 
 ```
 echo export PoolControllerProjectPath=/home/keenan/Documents/PoolController >> ~/.bashrc  # Project path on Linux cross compiler computer
 echo export PoolControllerProjectPiPath=/home/jeff/Documents/PoolController >> ~/.bashrc  # Project path on Raspberry Pi
 echo export PiUsername=jeff >> ~/.bashrc  # Raspberry Pi username
 echo export PiHostname=jeffpi >> ~/.bashrc  # Raspberry Pi hostname
+echo export PiSshPort=22 >> ~/.bashrc  # Raspberry Pi port
 source ~/.bashrc
 mkdir -p $PoolControllerProjectPath
 ```
