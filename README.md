@@ -387,6 +387,10 @@ sudo vi /etc/ssh/sshd_config
 Port 22  # Change port number to improve security
 PasswordAuthentication no  # Removes password authentication to improve security
 sudo /etc/init.d/ssh restart  # Restart ssh server to load settings changes
+
+# How to change wifi settings
+sudo raspi-config
+    System Options -> Wireless LAN
 ```
 
 
